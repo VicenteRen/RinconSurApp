@@ -11,6 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import cl.duoc.rinconsurapp.ui.screens.InicioSesionContent
+import cl.duoc.rinconsurapp.ui.screens.InicioSesionPreview
+import cl.duoc.rinconsurapp.ui.screens.InicioSesionScreen
 import cl.duoc.rinconsurapp.ui.screens.RegistroObservacionScreen
 import cl.duoc.rinconsurapp.ui.theme.RinconSurAppTheme
 
@@ -20,7 +23,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RinconSurAppTheme {
-                RegistroObservacionScreen()
+                InicioSesionScreen()
             }
         }
     }
