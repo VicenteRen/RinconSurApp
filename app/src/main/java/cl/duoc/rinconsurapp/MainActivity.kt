@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import cl.duoc.rinconsurapp.ui.screens.InicioSesionContent
 import cl.duoc.rinconsurapp.ui.screens.InicioSesionPreview
 import cl.duoc.rinconsurapp.ui.screens.InicioSesionScreen
+import cl.duoc.rinconsurapp.ui.screens.PerfilUsuarioScreen
 import cl.duoc.rinconsurapp.ui.screens.RegistroObservacionScreen
 import cl.duoc.rinconsurapp.ui.theme.RinconSurAppTheme
 
@@ -23,7 +24,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RinconSurAppTheme {
-                InicioSesionScreen()
+                PerfilUsuarioScreen()
             }
         }
     }
