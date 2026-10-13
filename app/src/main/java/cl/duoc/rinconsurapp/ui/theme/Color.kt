@@ -34,3 +34,6 @@ val GrisDeshabilitado = Color(0xFFBDBAC7)
 // --- Colores de estado (mensajes al usuario) ---
 val Exito = Color(0xFF2E9E5B)           // Verde: operación correcta
 val ExitoFondo = Color(0xFFE3F5EA)
+
+// --- Color usado en ImagenEncabezado ---
+val SombraImagen = Color(0x99000000) // Sombra semitransparente para los fondos
