@@ -37,3 +37,6 @@ val ExitoFondo = Color(0xFFE3F5EA)
 
 // --- Color usado en ImagenEncabezado ---
 val SombraImagen = Color(0x99000000) // Sombra semitransparente para los fondos
+
+// --- Color usado en Icono del boton "volver" de la pantalla de Perfil ---
+val NegroIconos = Color(0xFF1C1B1F)
