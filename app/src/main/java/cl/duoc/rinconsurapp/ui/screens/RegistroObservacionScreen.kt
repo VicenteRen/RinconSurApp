@@ -6,17 +6,21 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cl.duoc.rinconsurapp.R
 import cl.duoc.rinconsurapp.model.*
 import cl.duoc.rinconsurapp.ui.components.*
-import cl.duoc.rinconsurapp.ui.theme.Dimens
+import cl.duoc.rinconsurapp.ui.theme.RinconSurAppTheme
 import cl.duoc.rinconsurapp.viewmodel.RegistroObservacionViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun RegistroObservacionScreen(
@@ -24,15 +28,25 @@ fun RegistroObservacionScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val mensajeExito = stringResource(R.string.msg_registro_exitoso)
+
     RegistroObservacionContent(
         uiState = uiState,
-        onClasificacionSeleccionada = viewModel::onClasificacionSeleccionada,
-        onRangoEtarioSeleccionado = viewModel::onRangoEtarioSeleccionado,
-        onCompaniaSeleccionada = viewModel::onCompaniaSeleccionada,
-        onTieneComprasCambia = viewModel::onTieneComprasCambia,
+        snackbarHostState = snackbarHostState,
         onAccesoDestinoSeleccionado = viewModel::onAccesoDestinoSeleccionado,
+        onClasificacionSeleccionada = viewModel::onClasificacionSeleccionada,
+        onTieneComprasCambia = viewModel::onTieneComprasCambia,
+        onCompaniaSeleccionada = viewModel::onCompaniaSeleccionada,
+        onRangoEtarioSeleccionado = viewModel::onRangoEtarioSeleccionado,
         onLimpiar = viewModel::onLimpiar,
-        onRegistrar = viewModel::onRegistrar
+        onRegistrar = {
+            viewModel.onRegistrar()
+            scope.launch {
+                snackbarHostState.showSnackbar(mensajeExito)
+            }
+        }
     )
 }
 
@@ -40,24 +54,28 @@ fun RegistroObservacionScreen(
 @Composable
 fun RegistroObservacionContent(
     uiState: RegistroObservacionUiState,
-    onClasificacionSeleccionada: (Clasificacion) -> Unit,
-    onRangoEtarioSeleccionado: (RangoEtario) -> Unit,
-    onCompaniaSeleccionada: (Compania) -> Unit,
-    onTieneComprasCambia: (Boolean) -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onAccesoDestinoSeleccionado: (Acceso) -> Unit,
+    onClasificacionSeleccionada: (Clasificacion) -> Unit,
+    onTieneComprasCambia: (Boolean) -> Unit,
+    onCompaniaSeleccionada: (Compania) -> Unit,
+    onRangoEtarioSeleccionado: (RangoEtario) -> Unit,
     onLimpiar: () -> Unit,
     onRegistrar: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nuevo Registro - Observador") },
+                // Aquí inyectamos el nombre del empleado en el %1$s de strings.xml
+                title = { Text(stringResource(R.string.titulo_observador, uiState.nombreObservador)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -67,7 +85,18 @@ fun RegistroObservacionContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            TarjetaSeccion(titulo = "01. Clasificación") {
+            // 01. Punto de Acceso (Siempre visible para cualquier persona que entre)
+            TarjetaSeccion(titulo = stringResource(R.string.seccion_acceso)) {
+                GrupoRadio(
+                    opciones = Acceso.entries,
+                    seleccionada = uiState.accesoDestino,
+                    onSeleccionar = onAccesoDestinoSeleccionado,
+                    textoDe = { it.etiqueta }
+                )
+            }
+
+            // 02. Clasificación
+            TarjetaSeccion(titulo = stringResource(R.string.seccion_clasificacion)) {
                 GrupoRadio(
                     opciones = Clasificacion.entries,
                     seleccionada = uiState.clasificacion,
@@ -76,31 +105,14 @@ fun RegistroObservacionContent(
                 )
             }
 
-            TarjetaSeccion(titulo = "02. Rango Etario") {
-                GrupoRadio(
-                    opciones = RangoEtario.entries,
-                    seleccionada = uiState.rangoEtario,
-                    onSeleccionar = onRangoEtarioSeleccionado,
-                    textoDe = { it.etiqueta }
-                )
-            }
-
-            TarjetaSeccion(titulo = "03. Compañía") {
-                GrupoRadio(
-                    opciones = Compania.entries,
-                    seleccionada = uiState.compania,
-                    onSeleccionar = onCompaniaSeleccionada,
-                    textoDe = { it.etiqueta }
-                )
-            }
-
-            TarjetaSeccion(titulo = "04. Variables Adicionales") {
+            // 03. Variables Adicionales (¿Trae compras?)
+            TarjetaSeccion(titulo = stringResource(R.string.seccion_variables)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "¿Trae compras de otra tienda?",
+                        text = stringResource(R.string.pregunta_compras),
                         modifier = Modifier.weight(1f)
                     )
                     Switch(
@@ -110,57 +122,41 @@ fun RegistroObservacionContent(
                 }
             }
 
-            if (uiState.clasificacion == Clasificacion.TRANSITO) {
-                TarjetaSeccion(titulo = "05. Hacia qué acceso se dirige:") {
-                    GrupoRadio(
-                        opciones = Acceso.entries,
-                        seleccionada = uiState.accesoDestino ?: Acceso.A1,
-                        onSeleccionar = onAccesoDestinoSeleccionado,
-                        textoDe = { it.etiqueta }
-                    )
-                }
+            // 04. Compañía
+            TarjetaSeccion(titulo = stringResource(R.string.seccion_compania)) {
+                GrupoRadio(
+                    opciones = Compania.entries,
+                    seleccionada = uiState.compania,
+                    onSeleccionar = onCompaniaSeleccionada,
+                    textoDe = { it.etiqueta }
+                )
             }
 
+            // 05. Rango Etario
+            TarjetaSeccion(titulo = stringResource(R.string.seccion_rango_etario)) {
+                GrupoRadio(
+                    opciones = RangoEtario.entries,
+                    seleccionada = uiState.rangoEtario,
+                    onSeleccionar = onRangoEtarioSeleccionado,
+                    textoDe = { it.etiqueta }
+                )
+            }
+
+            // Botones Limpiar y Guardar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 BotonSecundario(
-                    texto = "Limpiar",
+                    texto = stringResource(R.string.btn_limpiar),
                     onClick = onLimpiar,
                     modifier = Modifier.weight(1f)
                 )
                 BotonPrincipal(
-                    texto = "Guardar",
+                    texto = stringResource(R.string.btn_guardar),
                     onClick = onRegistrar,
                     modifier = Modifier.weight(1f)
                 )
-            }
-
-            if (uiState.registroExitoso) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier.padding(Dimens.espacioMedio),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(id = cl.duoc.rinconsurapp.R.drawable.ic_check),
-                            contentDescription = null,
-                            modifier = Modifier.size(Dimens.tamanoIcono)
-                        )
-                        Text(
-                            text = "¡Registro guardado correctamente!",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(start = Dimens.espacioChico)
-                        )
-                    }
-                }
             }
         }
     }
@@ -168,17 +164,17 @@ fun RegistroObservacionContent(
 
 // ----------------------------- PREVIEWS -----------------------------
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, heightDp = 1100)
 @Composable
 private fun RegistroObservacionPreview() {
-    MaterialTheme {
+    RinconSurAppTheme {
         RegistroObservacionContent(
-            uiState = RegistroObservacionUiState(),
-            onClasificacionSeleccionada = {},
-            onRangoEtarioSeleccionado = {},
-            onCompaniaSeleccionada = {},
-            onTieneComprasCambia = {},
+            uiState = RegistroObservacionUiState(nombreObservador = "Vicente Ponce"),
             onAccesoDestinoSeleccionado = {},
+            onClasificacionSeleccionada = {},
+            onTieneComprasCambia = {},
+            onCompaniaSeleccionada = {},
+            onRangoEtarioSeleccionado = {},
             onLimpiar = {},
             onRegistrar = {}
         )

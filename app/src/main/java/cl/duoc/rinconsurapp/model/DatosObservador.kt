@@ -29,10 +29,24 @@ enum class Acceso(val etiqueta: String) {
 }
 
 data class RegistroObservacionUiState(
+    val nombreObservador: String = "Observador",
+    val accesoDestino: Acceso = Acceso.A1,
     val clasificacion: Clasificacion = Clasificacion.TRANSITO,
     val rangoEtario: RangoEtario = RangoEtario.RANGO_26_40,
     val compania: Compania = Compania.SOLO,
     val tieneComprasExternas: Boolean = false,
-    val accesoDestino: Acceso? = null,
     val registroExitoso: Boolean = false
+)
+
+// Representa una fila de la tabla "registros_observacion" en SQLite
+data class RegistroObservacion(
+    val id: Long = 0,
+    val clasificacion: String,
+    val rangoEtario: String,
+    val compania: String,
+    val tieneComprasExternas: Boolean,
+    val accesoDestino: String?,
+    val fechaHora: String,
+    val usuarioId: Long,
+    val nombreObservador: String = ""
 )

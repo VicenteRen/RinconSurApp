@@ -24,7 +24,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RinconSurAppTheme {
-                PerfilUsuarioScreen()
+                RegistroObservacionScreen()
+                //PerfilUsuarioScreen()
             }
         }
     }
