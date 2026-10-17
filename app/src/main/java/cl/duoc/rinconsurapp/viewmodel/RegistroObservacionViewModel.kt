@@ -1,51 +1,99 @@
 package cl.duoc.rinconsurapp.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import cl.duoc.rinconsurapp.data.RinconSurDbHelper
+import cl.duoc.rinconsurapp.data.SesionPreferencias
 import cl.duoc.rinconsurapp.model.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class RegistroObservacionViewModel : ViewModel() {
+class RegistroObservacionViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Estado privado y mutable que solo el ViewModel puede modificar
+    private val db = RinconSurDbHelper(application)
+    private val sesion = SesionPreferencias(application)
+
     private val _uiState = MutableStateFlow(RegistroObservacionUiState())
-
-    // Estado público y de solo lectura que la interfaz observará
     val uiState: StateFlow<RegistroObservacionUiState> = _uiState.asStateFlow()
 
-    fun onClasificacionSeleccionada(clasificacion: Clasificacion) {
-        _uiState.update {
-            // RN-08: El destino solo importa si es Tránsito. Si es otra cosa, lo volvemos null.
-            val destino = if (clasificacion == Clasificacion.TRANSITO) it.accesoDestino else null
-            it.copy(clasificacion = clasificacion, accesoDestino = destino)
+    init {
+        cargarNombreObservador()
+    }
+
+    // Lee quién inició sesión en SQLite para poner su nombre en el título
+    fun cargarNombreObservador() {
+        val idGuardado = sesion.leer()
+        val idUsuarioActivo = if (idGuardado != SesionPreferencias.SIN_SESION) idGuardado else 1L
+        val usuario = db.buscarUsuarioPorId(idUsuarioActivo)
+
+        if (usuario != null) {
+            _uiState.update { it.copy(nombreObservador = usuario.nombreCompleto) }
         }
     }
 
+    fun onAccesoDestinoSeleccionado(acceso: Acceso) {
+        _uiState.update { it.copy(accesoDestino = acceso, registroExitoso = false) }
+    }
+
+    fun onClasificacionSeleccionada(clasificacion: Clasificacion) {
+        // Ahora ya no borra el acceso, porque toda persona entra por un acceso
+        _uiState.update { it.copy(clasificacion = clasificacion, registroExitoso = false) }
+    }
+
     fun onRangoEtarioSeleccionado(rango: RangoEtario) {
-        _uiState.update { it.copy(rangoEtario = rango) }
+        _uiState.update { it.copy(rangoEtario = rango, registroExitoso = false) }
     }
 
     fun onCompaniaSeleccionada(compania: Compania) {
-        _uiState.update { it.copy(compania = compania) }
+        _uiState.update { it.copy(compania = compania, registroExitoso = false) }
     }
 
     fun onTieneComprasCambia(tiene: Boolean) {
-        _uiState.update { it.copy(tieneComprasExternas = tiene) }
-    }
-
-    fun onAccesoDestinoSeleccionado(acceso: Acceso) {
-        _uiState.update { it.copy(accesoDestino = acceso) }
+        _uiState.update { it.copy(tieneComprasExternas = tiene, registroExitoso = false) }
     }
 
     fun onRegistrar() {
-        // A futuro, aquí conectaremos SQLite/Room para guardar los datos sin internet
-        _uiState.update { it.copy(registroExitoso = true) }
+        val estadoActual = _uiState.value
+
+        val idGuardado = sesion.leer()
+        val idUsuarioActivo = if (idGuardado != SesionPreferencias.SIN_SESION) idGuardado else 1L
+        val horaActual = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+
+        val nuevoRegistro = RegistroObservacion(
+            clasificacion = estadoActual.clasificacion.etiqueta,
+            rangoEtario = estadoActual.rangoEtario.etiqueta,
+            compania = estadoActual.compania.etiqueta,
+            tieneComprasExternas = estadoActual.tieneComprasExternas,
+            accesoDestino = estadoActual.accesoDestino.etiqueta, // Siempre guarda el acceso actual
+            fechaHora = horaActual,
+            usuarioId = idUsuarioActivo
+        )
+
+        db.insertarRegistro(nuevoRegistro)
+
+        // Reinicia el formulario para la siguiente persona, pero MANTIENE el nombre y la puerta actual
+        _uiState.value = RegistroObservacionUiState(
+            nombreObservador = estadoActual.nombreObservador,
+            accesoDestino = estadoActual.accesoDestino,
+            registroExitoso = true
+        )
     }
 
     fun onLimpiar() {
-        // Resetea la pantalla a sus valores por defecto
-        _uiState.value = RegistroObservacionUiState()
+        val estadoActual = _uiState.value
+        _uiState.value = RegistroObservacionUiState(
+            nombreObservador = estadoActual.nombreObservador,
+            accesoDestino = estadoActual.accesoDestino
+        )
+    }
+
+    override fun onCleared() {
+        db.close()
+        super.onCleared()
     }
 }
