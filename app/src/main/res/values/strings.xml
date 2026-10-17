@@ -12,4 +12,27 @@
     <string name="seccion_destino">05. Hacia qué acceso se dirige:</string>
     <string name="btn_guardar">Guardar</string>
     <string name="msg_registro_exitoso">¡Persona registrada correctamente!</string>
+
+    <!-- Textos Compartidos -->
+    <string name="btn_actualizar_datos">Actualizar Datos</string>
+    <string name="btn_cerrar_sesion">Cerrar Sesión</string>
+    <string name="cd_foto_perfil">Foto de Perfil</string>
+    <string name="cd_volver">Volver</string>
+
+    <!-- Pantalla: Inicio de Sesión -->
+    <string name="titulo_inicio_sesion">Inicio de Sesión</string>
+    <string name="etiqueta_rut">RUT (sin puntos ni guion)</string>
+    <string name="etiqueta_contrasena">Contraseña</string>
+    <string name="btn_iniciar_sesion">Iniciar Sesión</string>
+    <string name="msg_acceso_concedido">Acceso concedido</string>
+
+    <!-- Pantalla: Perfil de Usuario -->
+    <string name="titulo_mi_perfil">Mi Perfil</string>
+    <string name="prefijo_cargo">Cargo:</string>
+    <string name="cd_fondo_perfil">Fondo de perfil</string>
+    <string name="titulo_info_contacto">Información de Contacto</string>
+    <string name="etiqueta_correo">Correo Electrónico</string>
+    <string name="etiqueta_telefono">Teléfono Móvil</string>
+    <string name="msg_actualizacion_exitosa">¡Información actualizada con éxito!</string>
+    <string name="msg_cerrando_sesion">Cerrando sesión...</string>
 </resources>
