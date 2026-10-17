@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,7 +41,7 @@ import cl.duoc.rinconsurapp.viewmodel.PerfilUsuarioViewModel
 @Composable
 fun PerfilUsuarioScreen(
     viewModel: PerfilUsuarioViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    onVolver: () -> Unit = {} // <-- PREPARACIÓN PARA RUTAS
+    onVolver: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -67,7 +68,7 @@ fun PerfilUsuarioContent(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Mi Perfil", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(id = R.string.titulo_mi_perfil), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(
                         onClick = onVolver,
@@ -77,12 +78,11 @@ fun PerfilUsuarioContent(
                     ) {
                         Icon(
                             painter = painterResource(android.R.drawable.ic_media_previous),
-                            contentDescription = "Volver",
+                            contentDescription = stringResource(id = R.string.cd_volver),
                             tint = NegroIconos
                         )
                     }
                 },
-
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Primario,
                     titleContentColor = Color.White,
@@ -100,14 +100,14 @@ fun PerfilUsuarioContent(
         ) {
             Box(contentAlignment = Alignment.BottomCenter) {
                 ImagenEncabezado(
-                    descripcion = "Fondo de perfil",
+                    descripcion = stringResource(id = R.string.cd_fondo_perfil),
                     titulo = uiState.nombreCompleto,
-                    subtitulo = "Cargo: ${uiState.cargo}"
+                    subtitulo = "${stringResource(id = R.string.prefijo_cargo)} ${uiState.cargo}"
                 )
 
                 AvatarCircular(
                     imagen = R.drawable.avatar_usuario,
-                    descripcion = "Foto de Perfil",
+                    descripcion = stringResource(id = R.string.cd_foto_perfil),
                     modificador = Modifier.offset(y = 60.dp)
                 )
             }
@@ -117,13 +117,13 @@ fun PerfilUsuarioContent(
             Column(
                 modifier = Modifier.padding(horizontal = 24.dp)
             ) {
-                TarjetaSeccion(titulo = "Información de Contacto") {
+                TarjetaSeccion(titulo = stringResource(id = R.string.titulo_info_contacto)) {
                     Spacer(modifier = Modifier.height(16.dp))
 
                     CampoTexto(
                         valor = uiState.correoContacto,
                         onValorCambia = alCambiarCorreo,
-                        etiqueta = "Correo Electrónico",
+                        etiqueta = stringResource(id = R.string.etiqueta_correo),
                         icono = android.R.drawable.ic_dialog_email,
                         error = uiState.errorCorreo
                     )
@@ -133,7 +133,7 @@ fun PerfilUsuarioContent(
                     CampoTexto(
                         valor = uiState.telefonoContacto,
                         onValorCambia = alCambiarTelefono,
-                        etiqueta = "Teléfono Móvil",
+                        etiqueta = stringResource(id = R.string.etiqueta_telefono),
                         icono = android.R.drawable.ic_menu_call,
                         error = uiState.errorTelefono
                     )
@@ -141,7 +141,7 @@ fun PerfilUsuarioContent(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     BotonPrincipal(
-                        texto = "Actualizar Datos",
+                        texto = stringResource(id = R.string.btn_actualizar_datos),
                         onClick = alGuardar,
                         habilitado = uiState.esValido,
                         modifier = Modifier.fillMaxWidth()
@@ -149,7 +149,7 @@ fun PerfilUsuarioContent(
 
                     if (uiState.informacionModificadaExitosamente) {
                         Text(
-                            text = "¡Información actualizada con éxito!",
+                            text = stringResource(id = R.string.msg_actualizacion_exitosa),
                             color = Exito,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier
@@ -162,7 +162,7 @@ fun PerfilUsuarioContent(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 BotonPrincipal(
-                    texto = "Cerrar Sesión",
+                    texto = stringResource(id = R.string.btn_cerrar_sesion),
                     onClick = alCerrarSesion,
                     habilitado = true,
                     modifier = Modifier.fillMaxWidth()
@@ -170,7 +170,7 @@ fun PerfilUsuarioContent(
 
                 if (uiState.cerrarSesionExitoso) {
                     Text(
-                        text = "Cerrando sesión...",
+                        text = stringResource(id = R.string.msg_cerrando_sesion),
                         color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier
