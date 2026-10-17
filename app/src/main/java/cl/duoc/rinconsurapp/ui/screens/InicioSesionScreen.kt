@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,21 +53,21 @@ fun InicioSesionContent(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Rincón Sur",
+            text = stringResource(id = R.string.app_name),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(bottom = 32.dp)
         )
 
-        TarjetaSeccion(titulo = "Inicio de Sesión") {
+        TarjetaSeccion(titulo = stringResource(id = R.string.titulo_inicio_sesion)) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
             CampoTexto(
                 valor = uiState.rut,
                 onValorCambia = alCambiarRut,
-                etiqueta = "RUT (sin puntos ni guion)",
+                etiqueta = stringResource(id = R.string.etiqueta_rut),
                 icono = R.drawable.ic_persona,
                 error = uiState.rutError
             )
@@ -76,7 +77,7 @@ fun InicioSesionContent(
             CampoContrasena(
                 valor = uiState.contrasena,
                 onValorCambia = alCambiarContrasena,
-                etiqueta = "Contraseña",
+                etiqueta = stringResource(id = R.string.etiqueta_contrasena),
                 visible = uiState.contrasenaVisible,
                 onAlternarVisible = alAlternarVisibilidad,
                 error = uiState.contrasenaError
@@ -95,16 +96,15 @@ fun InicioSesionContent(
             }
 
             BotonPrincipal(
-                texto = "Iniciar Sesión",
+                texto = stringResource(id = R.string.btn_iniciar_sesion),
                 onClick = alIniciarSesion,
                 habilitado = uiState.esValido,
                 modifier = Modifier.fillMaxWidth()
             )
 
-
             if (uiState.autenticado) {
                 Text(
-                    text = "Acceso concedido",
+                    text = stringResource(id = R.string.msg_acceso_concedido),
                     color = Exito,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier
