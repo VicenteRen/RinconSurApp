@@ -16,6 +16,9 @@ import cl.duoc.rinconsurapp.ui.components.GraficoBarrasDashboard
 import cl.duoc.rinconsurapp.viewmodel.DashboardAdminViewModel
 import java.util.Locale
 import cl.duoc.rinconsurapp.ui.components.GraficoTortaDashboard
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun DashboardAdminScreen(
@@ -35,9 +38,14 @@ fun DashboardAdminContent(
     estado: DashboardAdminUiState,
     onActualizar: () -> Unit
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Rincón Sur") })
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         }
     ) { paddingInterno ->
 
@@ -193,12 +201,22 @@ fun DashboardAdminContent(
                     }
                 }
 
+
                 Button(
-                    onClick = onActualizar,
+                    onClick = {
+                        onActualizar()
+
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                "Estadísticas actualizadas"
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Actualizar estadísticas")
                 }
+
             }
         }
     }

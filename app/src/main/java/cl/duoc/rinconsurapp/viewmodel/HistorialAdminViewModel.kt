@@ -38,13 +38,21 @@ class HistorialAdminViewModel(application: Application) : AndroidViewModel(appli
     }
 
 
-    fun eliminarRegistro(idRegistro: Long) {
+    fun eliminarRegistro(idRegistro: Long): Boolean {
         val usuario = db.buscarUsuarioPorId(sesion.leer())
 
-        if (usuario?.rolId == Rol.ID_ADMIN) {
-            db.eliminarRegistro(idRegistro)
-            cargarRegistros()
+        if (usuario?.rolId != Rol.ID_ADMIN) {
+            return false
         }
+
+        val eliminados = db.eliminarRegistro(idRegistro)
+
+        if (eliminados > 0) {
+            cargarRegistros()
+            return true
+        }
+
+        return false
     }
 
 

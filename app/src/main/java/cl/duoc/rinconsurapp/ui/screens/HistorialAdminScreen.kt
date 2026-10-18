@@ -15,6 +15,8 @@ import cl.duoc.rinconsurapp.viewmodel.HistorialAdminViewModel
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun HistorialAdminScreen(
@@ -24,12 +26,14 @@ fun HistorialAdminScreen(
     val registros by viewModel.registros.collectAsStateWithLifecycle()
     val autorizado by viewModel.autorizado.collectAsStateWithLifecycle()
 
+
     HistorialAdminContent(
         registros = registros,
         autorizado = autorizado,
         alActualizar = { viewModel.cargarRegistros() },
         alEliminar = { id -> viewModel.eliminarRegistro(id) }
     )
+
 }
 
 
@@ -39,13 +43,18 @@ fun HistorialAdminContent(
     registros: List<RegistroObservacion>,
     autorizado: Boolean,
     alActualizar: () -> Unit,
-    alEliminar: (Long) -> Unit
+    alEliminar: (Long) -> Boolean
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Historial de observaciones") }
             )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         }
     ) { padding ->
 
@@ -72,18 +81,39 @@ fun HistorialAdminContent(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+
                         items(registros) { registro ->
                             TarjetaRegistroAdmin(
                                 registro = registro,
-                                alEliminar = alEliminar)
+                                alEliminar = { id ->
+                                    val eliminado = alEliminar(id)
+
+                                    if (eliminado) {
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                "Observación eliminada correctamente"
+                                            )
+                                        }
+                                    }
+                                }
+                            )
                         }
+
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
-                    onClick = alActualizar,
+                    onClick = {
+                        alActualizar()
+
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                "Historial actualizado"
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Actualizar historial")
