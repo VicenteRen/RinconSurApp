@@ -15,6 +15,7 @@ import cl.duoc.rinconsurapp.model.DashboardAdminUiState
 import cl.duoc.rinconsurapp.ui.components.GraficoBarrasDashboard
 import cl.duoc.rinconsurapp.viewmodel.DashboardAdminViewModel
 import java.util.Locale
+import cl.duoc.rinconsurapp.ui.components.GraficoTortaDashboard
 
 @Composable
 fun DashboardAdminScreen(
@@ -100,27 +101,61 @@ fun DashboardAdminContent(
                     )
                 }
 
+                val totalClasificados = estado.totalVisitas + estado.totalTransito
+
+                val porcentajeVisitas = if (totalClasificados > 0) {
+                    estado.totalVisitas.toFloat() / totalClasificados * 100f
+                } else {
+                    null
+                }
+
+                val porcentajeTransito = estado.porcentajeTransito
+
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            "Porcentaje de tránsito observado",
+                            "Comportamiento observado",
                             style = MaterialTheme.typography.titleMedium
                         )
 
-                        Text(
-                            estado.porcentajeTransito?.let {
-                                String.format(
-                                    Locale.forLanguageTag("es-CL"),
-                                    "%.1f %%",
-                                    it
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Tránsito")
+
+                                Text(
+                                    porcentajeTransito?.let {
+                                        String.format(
+                                            Locale.forLanguageTag("es-CL"),
+                                            "%.1f %%",
+                                            it
+                                        )
+                                    } ?: "Sin datos",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
-                            } ?: "Sin datos",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                            }
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Visitas")
+
+                                Text(
+                                    porcentajeVisitas?.let {
+                                        String.format(
+                                            Locale.forLanguageTag("es-CL"),
+                                            "%.1f %%",
+                                            it
+                                        )
+                                    } ?: "Sin datos",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -136,6 +171,24 @@ fun DashboardAdminContent(
 
                         GraficoBarrasDashboard(
                             datos = estado.registrosPorEdad
+                        )
+                    }
+                }
+
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            "Distribución por clasificación",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        GraficoTortaDashboard(
+                            visitas = estado.totalVisitas,
+                            transito = estado.totalTransito,
+                            noDeterminado = estado.totalNoDeterminado
                         )
                     }
                 }
