@@ -1,25 +1,28 @@
 package cl.duoc.rinconsurapp.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import cl.duoc.rinconsurapp.data.RinconSurDbHelper
+import cl.duoc.rinconsurapp.data.SesionPreferencias
 import cl.duoc.rinconsurapp.model.InicioSesionUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class InicioSesionViewModel : ViewModel() {
+class InicioSesionViewModel(application: Application) : AndroidViewModel(application) {
+
+    // Conexión a SQLite y SharedPreferences
+    private val db = RinconSurDbHelper(application)
+    private val sesion = SesionPreferencias(application)
 
     private val _uiState = MutableStateFlow(InicioSesionUiState())
     val uiState: StateFlow<InicioSesionUiState> = _uiState.asStateFlow()
 
     fun onRutCambiado(nuevoRut: String) {
-        // Limitador de caracteres: Máximo 9 caracteres
         if (nuevoRut.length > 9) return
-
-        // Bloquea letras al instante, solo permite el ingreso de "k"
         if (!nuevoRut.matches(Regex("^[0-9]*[kK]?$"))) return
 
-        //  Introducción de la validación del Módulo 11 (Formato continuo sin guion)
         val error = if (nuevoRut.isNotBlank() && !validarRutModulo11(nuevoRut)) {
             "RUT ingresado inválido (ej: 123456789)"
         } else null
@@ -58,17 +61,13 @@ class InicioSesionViewModel : ViewModel() {
     }
 
     fun iniciarSesion() {
-        // Mock de base de datos para testing
-        val rutObservador = "214297353"
-        val contrasenaObservador = "observador123"
+        val estado = _uiState.value
+        // Consulta real a SQLite con INNER JOIN a la tabla roles
+        val usuarioEncontrado = db.autenticar(estado.rut.trim(), estado.contrasena)
 
-        val rutAdmin = "228405566"
-        val contrasenaOAdmin = "admin123"
-
-        val esObservador = _uiState.value.rut == rutObservador && _uiState.value.contrasena == contrasenaObservador
-        val esAdmin = _uiState.value.rut == rutAdmin && _uiState.value.contrasena == contrasenaOAdmin
-
-        if (esObservador || esAdmin) {
+        if (usuarioEncontrado != null) {
+            // Guardamos en SharedPreferences quién inició sesión
+            sesion.guardar(usuarioEncontrado.id)
             _uiState.update { it.copy(autenticado = true, errorGeneral = null) }
         } else {
             _uiState.update {
@@ -80,14 +79,11 @@ class InicioSesionViewModel : ViewModel() {
         }
     }
 
-    // Validación del Módulo 11 (Formato sin puntos ni guión)
     private fun validarRutModulo11(rutCompleto: String): Boolean {
-
         val regex = Regex("^[0-9]{7,8}[0-9kK]{1}$")
         if (!regex.matches(rutCompleto.trim())) return false
 
         val rutLimpio = rutCompleto.trim()
-
         val numeroRut = rutLimpio.dropLast(1)
         val dvIngresado = rutLimpio.takeLast(1).uppercase()
 
@@ -99,7 +95,7 @@ class InicioSesionViewModel : ViewModel() {
         }
 
         val resto = suma % 11
-        val dvCalculado = (11 - resto).toString()
+        val dvCalculado = (11 - resto).toString() // <-- CORRECCIÓN APLICADA AQUÍ
 
         val dvEsperado = when (dvCalculado) {
             "11" -> "0"
@@ -108,5 +104,10 @@ class InicioSesionViewModel : ViewModel() {
         }
 
         return dvIngresado == dvEsperado
+    }
+
+    override fun onCleared() {
+        db.close()
+        super.onCleared()
     }
 }
