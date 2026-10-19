@@ -24,6 +24,7 @@ import cl.duoc.rinconsurapp.viewmodel.InicioSesionViewModel
 
 @Composable
 fun InicioSesionScreen(
+    onLoginExitoso: () -> Unit = {},
     viewModel: InicioSesionViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -33,7 +34,12 @@ fun InicioSesionScreen(
         alCambiarRut = { viewModel.onRutCambiado(it) },
         alCambiarContrasena = { viewModel.onContrasenaCambiada(it) },
         alAlternarVisibilidad = { viewModel.alternarVisibilidadContrasena() },
-        alIniciarSesion = { viewModel.iniciarSesion() }
+        alIniciarSesion = {
+            viewModel.iniciarSesion()
+            if (viewModel.uiState.value.autenticado) {
+                onLoginExitoso()
+            }
+        }
     )
 }
 

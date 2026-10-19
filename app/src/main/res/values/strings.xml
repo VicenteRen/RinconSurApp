@@ -4,7 +4,7 @@
     <string name="cd_mostrar_contrasena">ejemplo2\n</string>
 
     <!-- Pantalla Observador (Conteo de Pasillo) -->
-    <string name="titulo_observador">Nuevo Registro - %1$s</string>
+    <string name="titulo_observador">Nuevo Registro de %1$s</string>
     <string name="seccion_acceso">01. Punto de Acceso</string>
     <string name="seccion_clasificacion">02. Clasificación</string>
     <string name="seccion_variables">03. Variables Adicionales</string>

@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun HistorialObservadorScreen(
+    onAbrirMenu: () -> Unit = {},
     viewModel: HistorialObservadorViewModel = viewModel()
 ) {
     val registros by viewModel.registros.collectAsStateWithLifecycle()
@@ -24,7 +25,8 @@ fun HistorialObservadorScreen(
         registros = registros,
         autorizado = autorizado,
         alActualizar = { viewModel.cargarRegistros() },
-        alEliminar = { id -> viewModel.eliminarRegistro(id) }
+        alEliminar = { id -> viewModel.eliminarRegistro(id) },
+        onAbrirMenu = onAbrirMenu
     )
 }
 
@@ -34,7 +36,8 @@ fun HistorialObservadorContent(
     registros: List<RegistroObservacion>,
     autorizado: Boolean,
     alActualizar: () -> Unit,
-    alEliminar: (Long) -> Boolean
+    alEliminar: (Long) -> Boolean,
+    onAbrirMenu: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -42,7 +45,20 @@ fun HistorialObservadorContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mi historial de observaciones") }
+                title = { Text("Mi historial de observaciones") },
+                navigationIcon = {
+                    IconButton(onClick = onAbrirMenu) {
+                        Icon(
+                            painter = androidx.compose.ui.res.painterResource(cl.duoc.rinconsurapp.R.drawable.ic_menu),
+                            contentDescription = "Abrir menú"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         },
         snackbarHost = {

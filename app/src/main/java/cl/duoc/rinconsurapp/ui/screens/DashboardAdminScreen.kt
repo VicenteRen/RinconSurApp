@@ -22,13 +22,15 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun DashboardAdminScreen(
+    onAbrirMenu: () -> Unit = {},
     viewModel: DashboardAdminViewModel = viewModel()
 ) {
     val estado by viewModel.uiState.collectAsStateWithLifecycle()
 
     DashboardAdminContent(
         estado = estado,
-        onActualizar = viewModel::cargarEstadisticas
+        onActualizar = viewModel::cargarEstadisticas,
+        onAbrirMenu = onAbrirMenu
     )
 }
 
@@ -36,13 +38,29 @@ fun DashboardAdminScreen(
 @Composable
 fun DashboardAdminContent(
     estado: DashboardAdminUiState,
-    onActualizar: () -> Unit
+    onActualizar: () -> Unit,
+    onAbrirMenu: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Rincón Sur") })
+            TopAppBar(
+                title = { Text("Rincón Sur") }, // o el título que ella puso en Historial
+                navigationIcon = {
+                    IconButton(onClick = onAbrirMenu) {
+                        Icon(
+                            painter = androidx.compose.ui.res.painterResource(cl.duoc.rinconsurapp.R.drawable.ic_menu),
+                            contentDescription = "Abrir menú"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
         },
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)

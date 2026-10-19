@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun HistorialAdminScreen(
+    onAbrirMenu: () -> Unit = {},
     viewModel: HistorialAdminViewModel =
         androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
@@ -31,7 +32,8 @@ fun HistorialAdminScreen(
         registros = registros,
         autorizado = autorizado,
         alActualizar = { viewModel.cargarRegistros() },
-        alEliminar = { id -> viewModel.eliminarRegistro(id) }
+        alEliminar = { id -> viewModel.eliminarRegistro(id) },
+        onAbrirMenu = onAbrirMenu
     )
 
 }
@@ -43,14 +45,28 @@ fun HistorialAdminContent(
     registros: List<RegistroObservacion>,
     autorizado: Boolean,
     alActualizar: () -> Unit,
-    alEliminar: (Long) -> Boolean
+    alEliminar: (Long) -> Boolean,
+    onAbrirMenu: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Historial de observaciones") }
+                title = { Text("Historial de observaciones") },
+                navigationIcon = {
+                    IconButton(onClick = onAbrirMenu) {
+                        Icon(
+                            painter = androidx.compose.ui.res.painterResource(cl.duoc.rinconsurapp.R.drawable.ic_menu),
+                            contentDescription = "Abrir menú"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         },
         snackbarHost = {
