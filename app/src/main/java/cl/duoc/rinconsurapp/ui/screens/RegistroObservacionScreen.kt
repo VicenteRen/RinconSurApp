@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun RegistroObservacionScreen(
+    onAbrirMenu: () -> Unit = {},
     viewModel: RegistroObservacionViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -35,6 +36,7 @@ fun RegistroObservacionScreen(
     RegistroObservacionContent(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
+        onAbrirMenu = onAbrirMenu,
         onAccesoDestinoSeleccionado = viewModel::onAccesoDestinoSeleccionado,
         onClasificacionSeleccionada = viewModel::onClasificacionSeleccionada,
         onTieneComprasCambia = viewModel::onTieneComprasCambia,
@@ -55,6 +57,7 @@ fun RegistroObservacionScreen(
 fun RegistroObservacionContent(
     uiState: RegistroObservacionUiState,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    onAbrirMenu: () -> Unit = {},
     onAccesoDestinoSeleccionado: (Acceso) -> Unit,
     onClasificacionSeleccionada: (Clasificacion) -> Unit,
     onTieneComprasCambia: (Boolean) -> Unit,
@@ -66,11 +69,19 @@ fun RegistroObservacionContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                // Aquí inyectamos el nombre del empleado en el %1$s de strings.xml
                 title = { Text(stringResource(R.string.titulo_observador, uiState.nombreObservador)) },
+                navigationIcon = {
+                    IconButton(onClick = onAbrirMenu) {
+                        Icon(
+                            painter = androidx.compose.ui.res.painterResource(R.drawable.ic_menu),
+                            contentDescription = "Abrir menú"
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         },

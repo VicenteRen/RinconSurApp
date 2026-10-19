@@ -46,7 +46,8 @@ import cl.duoc.rinconsurapp.viewmodel.PerfilUsuarioViewModel
 @Composable
 fun PerfilUsuarioScreen(
     viewModel: PerfilUsuarioViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    onVolver: () -> Unit = {}
+    onVolver: () -> Unit = {},
+    onCerrarSesion: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -55,7 +56,10 @@ fun PerfilUsuarioScreen(
         alCambiarTelefono = { viewModel.alCambiarTelefono(it) },
         alCambiarCorreo = { viewModel.alCambiarCorreo(it) },
         alGuardar = { viewModel.guardarCambios() },
-        alCerrarSesion = { viewModel.cerrarSesion() },
+        alCerrarSesion = {
+            viewModel.cerrarSesion()
+            onCerrarSesion()
+        },
         onVolver = onVolver
     )
 }
@@ -76,22 +80,15 @@ fun PerfilUsuarioContent(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(id = R.string.titulo_mi_perfil), fontWeight = FontWeight.Bold) },
+                title = { Text("Mi Perfil", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(
-                        onClick = onVolver,
-                        modifier = Modifier
-                            .padding(start = 8.dp)
-                            .background(color = TextoClaro, shape = CircleShape)
-                    ) {
+                    IconButton(onClick = onVolver) {
                         Icon(
-                            painter = painterResource(android.R.drawable.ic_media_previous),
-                            contentDescription = stringResource(id = R.string.cd_volver),
-                            tint = NegroIconos
+                            painter = painterResource(R.drawable.ic_volver),
+                            contentDescription = "Volver"
                         )
                     }
                 },
-
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Primario,
                     titleContentColor = Color.White,
