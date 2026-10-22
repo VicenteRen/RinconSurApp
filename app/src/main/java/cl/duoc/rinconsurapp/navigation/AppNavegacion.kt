@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -20,10 +21,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import cl.duoc.rinconsurapp.R
 import cl.duoc.rinconsurapp.data.RinconSurDbHelper
 import cl.duoc.rinconsurapp.data.SesionPreferencias
 import cl.duoc.rinconsurapp.model.Rol
@@ -49,7 +53,6 @@ fun AppNavegacion() {
         onDispose { db.close() }
     }
 
-    // Lee si ya había una sesión guardada en SharedPreferences al abrir la app
     var usuarioActual by remember {
         mutableStateOf(db.buscarUsuarioPorId(sesion.leer()))
     }
@@ -58,18 +61,15 @@ fun AppNavegacion() {
     val scope = rememberCoroutineScope()
     var mostrarDialogoCerrarSesion by remember { mutableStateOf(false) }
 
-    // Saber en qué pantalla estamos para marcarla activa en el menú lateral
     val entradaActual by navController.currentBackStackEntryAsState()
     val rutaActual = entradaActual?.destination?.route
 
-    // Si había sesión activa al abrir la app, entra directo a su pantalla según rol
     val destinoInicial = when (usuarioActual?.rolId) {
         Rol.ID_ADMIN -> Ruta.DashboardAdmin.ruta
         Rol.ID_OBSERVADOR -> Ruta.RegistroObservacion.ruta
         else -> Ruta.InicioSesion.ruta
     }
 
-    // Función para cerrar sesión y volver al Login limpiando el historial
     val ejecutarCierreSesion = {
         sesion.borrar()
         usuarioActual = null
@@ -78,12 +78,11 @@ fun AppNavegacion() {
         }
     }
 
-    // AlertDialog del profesor para confirmar cierre de sesión
     if (mostrarDialogoCerrarSesion) {
         AlertDialog(
             onDismissRequest = { mostrarDialogoCerrarSesion = false },
-            title = { Text("Cerrar sesión") },
-            text = { Text("¿Estás seguro de que deseas cerrar tu sesión?") },
+            title = { Text(stringResource(R.string.dialog_cerrar_sesion_titulo)) },
+            text = { Text(stringResource(R.string.dialog_cerrar_sesion_msg)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -91,12 +90,12 @@ fun AppNavegacion() {
                         ejecutarCierreSesion()
                     }
                 ) {
-                    Text("Cerrar sesión")
+                    Text(stringResource(R.string.btn_cerrar_sesion))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { mostrarDialogoCerrarSesion = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.btn_cancelar))
                 }
             }
         )
@@ -104,15 +103,18 @@ fun AppNavegacion() {
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        // Deshabilita el deslizamiento del menú cuando estamos en la pantalla de Login
         gesturesEnabled = rutaActual != Ruta.InicioSesion.ruta,
         drawerContent = {
             ModalDrawerSheet {
                 Text(
                     text = if (usuarioActual != null) {
-                        "Hola, ${usuarioActual!!.nombreCompleto}\n(${usuarioActual!!.rolNombre})"
+                        stringResource(
+                            R.string.saludo_menu,
+                            usuarioActual!!.nombreCompleto,
+                            usuarioActual!!.rolNombre
+                        )
                     } else {
-                        "Rincón Sur"
+                        stringResource(R.string.app_name)
                     },
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(Dimens.espacioMedio)
@@ -122,7 +124,13 @@ fun AppNavegacion() {
                 // --- OPCIONES EXCLUSIVAS DEL OBSERVADOR ---
                 if (usuarioActual?.rolId == Rol.ID_OBSERVADOR) {
                     NavigationDrawerItem(
-                        label = { Text("Nuevo Registro") },
+                        label = { Text(stringResource(R.string.titulo_observador)) },
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_nuevo_registro),
+                                contentDescription = null
+                            )
+                        },
                         selected = rutaActual == Ruta.RegistroObservacion.ruta,
                         onClick = {
                             scope.launch { drawerState.close() }
@@ -132,7 +140,13 @@ fun AppNavegacion() {
                         }
                     )
                     NavigationDrawerItem(
-                        label = { Text("Mi Dashboard") },
+                        label = { Text(stringResource(R.string.menu_mi_dashboard)) },
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_dashboard),
+                                contentDescription = null
+                            )
+                        },
                         selected = rutaActual == Ruta.DashboardObservador.ruta,
                         onClick = {
                             scope.launch { drawerState.close() }
@@ -142,7 +156,13 @@ fun AppNavegacion() {
                         }
                     )
                     NavigationDrawerItem(
-                        label = { Text("Mi Historial") },
+                        label = { Text(stringResource(R.string.menu_mi_historial)) },
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_historial),
+                                contentDescription = null
+                            )
+                        },
                         selected = rutaActual == Ruta.HistorialObservador.ruta,
                         onClick = {
                             scope.launch { drawerState.close() }
@@ -156,7 +176,13 @@ fun AppNavegacion() {
                 // --- OPCIONES EXCLUSIVAS DEL ADMINISTRADOR ---
                 if (usuarioActual?.rolId == Rol.ID_ADMIN) {
                     NavigationDrawerItem(
-                        label = { Text("Dashboard Global") },
+                        label = { Text(stringResource(R.string.menu_dashboard_global)) },
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_dashboard),
+                                contentDescription = null
+                            )
+                        },
                         selected = rutaActual == Ruta.DashboardAdmin.ruta,
                         onClick = {
                             scope.launch { drawerState.close() }
@@ -166,7 +192,13 @@ fun AppNavegacion() {
                         }
                     )
                     NavigationDrawerItem(
-                        label = { Text("Historial Global") },
+                        label = { Text(stringResource(R.string.menu_historial_global)) },
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_historial),
+                                contentDescription = null
+                            )
+                        },
                         selected = rutaActual == Ruta.HistorialAdmin.ruta,
                         onClick = {
                             scope.launch { drawerState.close() }
@@ -181,7 +213,13 @@ fun AppNavegacion() {
                 if (usuarioActual != null) {
                     HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.espacioChico))
                     NavigationDrawerItem(
-                        label = { Text("Mi Perfil") },
+                        label = { Text(stringResource(R.string.titulo_mi_perfil)) },
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_solo), // o R.drawable.ic_perfil
+                                contentDescription = null
+                            )
+                        },
                         selected = rutaActual == Ruta.Perfil.ruta,
                         onClick = {
                             scope.launch { drawerState.close() }
@@ -191,7 +229,13 @@ fun AppNavegacion() {
                         }
                     )
                     NavigationDrawerItem(
-                        label = { Text("Cerrar Sesión") },
+                        label = { Text(stringResource(R.string.btn_cerrar_sesion)) },
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_salir),
+                                contentDescription = null
+                            )
+                        },
                         selected = false,
                         onClick = {
                             scope.launch { drawerState.close() }
@@ -208,7 +252,6 @@ fun AppNavegacion() {
             navController = navController,
             startDestination = destinoInicial
         ) {
-            // 1. Pantalla de Login
             composable(Ruta.InicioSesion.ruta) {
                 InicioSesionScreen(
                     onLoginExitoso = {
@@ -225,8 +268,6 @@ fun AppNavegacion() {
                     }
                 )
             }
-
-            // 2. Pantallas del Observador
             composable(Ruta.RegistroObservacion.ruta) {
                 RegistroObservacionScreen(onAbrirMenu = abrirMenu)
             }
@@ -236,16 +277,12 @@ fun AppNavegacion() {
             composable(Ruta.HistorialObservador.ruta) {
                 HistorialObservadorScreen(onAbrirMenu = abrirMenu)
             }
-
-            // 3. Pantallas del Administrador
             composable(Ruta.DashboardAdmin.ruta) {
                 DashboardAdminScreen(onAbrirMenu = abrirMenu)
             }
             composable(Ruta.HistorialAdmin.ruta) {
                 HistorialAdminScreen(onAbrirMenu = abrirMenu)
             }
-
-            // 4. Pantalla de Perfil (Común para ambos roles)
             composable(Ruta.Perfil.ruta) {
                 PerfilUsuarioScreen(
                     onVolver = { navController.navigateUp() },

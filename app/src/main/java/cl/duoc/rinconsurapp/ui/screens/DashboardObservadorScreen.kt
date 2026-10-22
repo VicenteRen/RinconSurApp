@@ -18,6 +18,8 @@ import cl.duoc.rinconsurapp.viewmodel.DashboardObservadorViewModel
 import java.util.Locale
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
+import cl.duoc.rinconsurapp.ui.theme.Primario
 import kotlinx.coroutines.launch
 
 @Composable
@@ -56,9 +58,9 @@ fun DashboardObservadorContent(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = Primario,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
             )
         },
