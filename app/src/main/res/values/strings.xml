@@ -4,7 +4,7 @@
     <string name="cd_mostrar_contrasena">ejemplo2\n</string>
 
     <!-- Pantalla Observador (Conteo de Pasillo) -->
-    <string name="titulo_observador">Nuevo Registro de %1$s</string>
+    <string name="titulo_observador">Nuevo Registro</string>
     <string name="seccion_acceso">01. Punto de Acceso</string>
     <string name="seccion_clasificacion">02. Clasificación</string>
     <string name="seccion_variables">03. Variables Adicionales</string>
@@ -37,4 +37,22 @@
     <string name="etiqueta_telefono">Teléfono Móvil</string>
     <string name="msg_actualizacion_exitosa">¡Información actualizada con éxito!</string>
     <string name="msg_cerrando_sesion">Cerrando sesión...</string>
+
+    <!-- Navegación y Menú Lateral -->
+    <string name="saludo_menu">Hola, %1$s\n(%2$s)</string>
+    <string name="menu_mi_dashboard">Mi Dashboard</string>
+    <string name="menu_mi_historial">Mi Historial</string>
+    <string name="menu_dashboard_global">Dashboard Global</string>
+    <string name="menu_historial_global">Historial Global</string>
+    <string name="dialog_cerrar_sesion_titulo">Cerrar sesión</string>
+    <string name="dialog_cerrar_sesion_msg">¿Estás seguro de que deseas cerrar tu sesión?</string>
+    <string name="btn_cancelar">Cancelar</string>
+
+    <!-- Cámara, Galería y Permisos (Perfil) -->
+    <string name="texto_cambiar_foto">Cambiar foto de perfil</string>
+    <string name="btn_camara">Cámara</string>
+    <string name="btn_galeria">Galería</string>
+    <string name="permiso_camara_denegado">Permiso de cámara denegado. Puedes activarlo en Ajustes.</string>
+    <string name="permiso_galeria_denegado">Permiso de galería denegado. Puedes activarlo en Ajustes.</string>
+    <string name="btn_ajustes">Ajustes</string>
 </resources>

@@ -15,5 +15,6 @@ data class PerfilUsuarioUiState(
     val esValido: Boolean = true,
 
     val informacionModificadaExitosamente: Boolean = false,
-    val cerrarSesionExitoso: Boolean = false
+    val cerrarSesionExitoso: Boolean = false,
+    val avatar: ByteArray? = null
 )

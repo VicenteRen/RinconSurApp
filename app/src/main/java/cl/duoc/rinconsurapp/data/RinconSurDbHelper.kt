@@ -30,6 +30,7 @@ class RinconSurDbHelper(context: Context) :
         private const val USU_CORREO = "correo"
         private const val USU_TELEFONO = "telefono"
         private const val USU_ROL = "id_rol"
+        private const val USU_AVATAR = "avatar"
 
         // 3. Tabla REGISTROS DE OBSERVACIÓN
         private const val TABLA_REGISTROS = "registros_observacion"
@@ -56,6 +57,7 @@ class RinconSurDbHelper(context: Context) :
                     "$USU_NOMBRE TEXT NOT NULL, " +
                     "$USU_CORREO TEXT NOT NULL, " +
                     "$USU_TELEFONO TEXT NOT NULL, " +
+                    "$USU_AVATAR BLOB, " + // NUEVO (Avatar)
                     "$USU_ROL INTEGER NOT NULL REFERENCES $TABLA_ROLES($ROL_ID))"
 
         private const val SQL_CREAR_REGISTROS =
@@ -131,6 +133,13 @@ class RinconSurDbHelper(context: Context) :
         return writableDatabase.update(TABLA_USUARIOS, valores, "$USU_ID = ?", arrayOf(id.toString()))
     }
 
+    fun actualizarAvatar(id: Long, avatar: ByteArray): Int {
+        val valores = ContentValues().apply {
+            put(USU_AVATAR, avatar)
+        }
+        return writableDatabase.update(TABLA_USUARIOS, valores, "$USU_ID = ?", arrayOf(id.toString()))
+    }
+
     // ---------------------------- REGISTROS DE OBSERVACIÓN ----------------------------
 
     // CREATE -> INSERT (Para tu botón Guardar)
@@ -177,7 +186,10 @@ class RinconSurDbHelper(context: Context) :
                         correo = cursor.getString(cursor.getColumnIndexOrThrow(USU_CORREO)),
                         telefono = cursor.getString(cursor.getColumnIndexOrThrow(USU_TELEFONO)),
                         rolId = cursor.getLong(cursor.getColumnIndexOrThrow(USU_ROL)),
-                        rolNombre = cursor.getString(cursor.getColumnIndexOrThrow(ROL_NOMBRE))
+                        rolNombre = cursor.getString(cursor.getColumnIndexOrThrow(ROL_NOMBRE)),
+                        avatar = cursor.getColumnIndexOrThrow(USU_AVATAR).let { col ->
+                            if (cursor.isNull(col)) null else cursor.getBlob(col)
+                        }
                     )
                 )
             }

@@ -6,10 +6,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.rinconsurapp.model.RegistroObservacion
+import cl.duoc.rinconsurapp.ui.theme.Primario
 import cl.duoc.rinconsurapp.viewmodel.HistorialObservadorViewModel
 import kotlinx.coroutines.launch
 
@@ -55,9 +57,9 @@ fun HistorialObservadorContent(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = Primario,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
             )
         },
