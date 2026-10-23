@@ -38,6 +38,28 @@
     <string name="msg_actualizacion_exitosa">¡Información actualizada con éxito!</string>
     <string name="msg_cerrando_sesion">Cerrando sesión...</string>
 
+    <!-- Pantalla: Restablecer Contraseña -->
+    <string name="btn_olvide_contrasena">¿Olvidaste tu contraseña?</string>
+    <string name="etiqueta_pregunta_seguridad">¿Cuál es el nombre de tu primera mascota?</string>
+    <string name="etiqueta_nueva_contrasena">Nueva Contraseña</string>
+    <string name="etiqueta_confirmar_contrasena">Confirmar Contraseña</string>
+    <string name="btn_cambiar_contrasena">Cambiar Contraseña</string>
+    <string name="msg_contrasena_restablecida">¡Contraseña restablecida con éxito!</string>
+    <string name="titulo_requisitos_contrasena">Requisitos de la nueva contraseña:</string>
+    <string name="req_longitud">Mínimo 8 caracteres</string>
+    <string name="req_numero">Al menos un número (0-9)</string>
+    <string name="req_mayuscula">Al menos una letra mayúscula</string>
+    <string name="req_sin_especiales">Sin caracteres especiales (solo letras y números)</string>
+    <string name="titulo_restablecer">Restablecer Contraseña</string>
+    <string name="etiqueta_seleccione_pregunta">Seleccione su pregunta de seguridad</string>
+    <string name="etiqueta_respuesta">Respuesta</string>
+    <string name="titulo_crear_segura">Crea una contraseña segura</string>
+    <string name="btn_ir_login">Ir al Login</string>
+
+    <!-- Opciones del Selector de Preguntas de Restablecer Contraseña -->
+    <string name="preg_mascota">¿Cuál es el nombre de tu primera mascota?</string>
+    <string name="preg_amigo">¿Cuál es el nombre de tu amigo de la infancia?</string>
+    <string name="preg_ciudad">¿En qué ciudad se conocieron tus padres?</string>
     <!-- Navegación y Menú Lateral -->
     <string name="saludo_menu">Hola, %1$s\n(%2$s)</string>
     <string name="menu_mi_dashboard">Mi Dashboard</string>
