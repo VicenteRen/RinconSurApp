@@ -62,7 +62,7 @@ class RegistroObservacionViewModel(application: Application) : AndroidViewModel(
 
         val idGuardado = sesion.leer()
         val idUsuarioActivo = if (idGuardado != SesionPreferencias.SIN_SESION) idGuardado else 1L
-        val horaActual = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+        val fechaHoraActual = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
 
         val nuevoRegistro = RegistroObservacion(
             clasificacion = estadoActual.clasificacion.etiqueta,
@@ -70,7 +70,7 @@ class RegistroObservacionViewModel(application: Application) : AndroidViewModel(
             compania = estadoActual.compania.etiqueta,
             tieneComprasExternas = estadoActual.tieneComprasExternas,
             accesoDestino = estadoActual.accesoDestino.etiqueta, // Siempre guarda el acceso actual
-            fechaHora = horaActual,
+            fechaHora = fechaHoraActual,
             usuarioId = idUsuarioActivo
         )
 
