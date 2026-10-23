@@ -14,7 +14,7 @@ class RinconSurDbHelper(context: Context) :
 
     companion object {
         private const val NOMBRE_BD = "rinconsur.db"
-        private const val VERSION_BD = 4
+        private const val VERSION_BD = 5
 
         // 1. Tabla ROLES
         private const val TABLA_ROLES = "roles"
@@ -34,6 +34,8 @@ class RinconSurDbHelper(context: Context) :
 
         private const val USU_PREG_SEGURIDAD = "pregunta_seguridad"
         private const val USU_RESP_SEGURIDAD = "respuesta_seguridad"
+
+        private const val USU_ACTIVO = "activo"
 
         // 3. Tabla REGISTROS DE OBSERVACIÓN
         private const val TABLA_REGISTROS = "registros_observacion"
@@ -62,7 +64,8 @@ class RinconSurDbHelper(context: Context) :
                     "$USU_TELEFONO TEXT NOT NULL, " +
                     "$USU_PREG_SEGURIDAD TEXT NOT NULL, " +
                     "$USU_RESP_SEGURIDAD TEXT NOT NULL, " +
-                    "$USU_AVATAR BLOB, " + // NUEVO (Avatar)
+                    "$USU_ACTIVO INTEGER NOT NULL DEFAULT 1, " +
+                    "$USU_AVATAR BLOB, " +
                     "$USU_ROL INTEGER NOT NULL REFERENCES $TABLA_ROLES($ROL_ID))"
 
         private const val SQL_CREAR_REGISTROS =
@@ -82,9 +85,9 @@ class RinconSurDbHelper(context: Context) :
                     "(1, 'Observador'), (2, 'Administrador')"
 
         private const val SQL_PRECARGAR_USUARIOS =
-            "INSERT INTO $TABLA_USUARIOS ($USU_ID, $USU_RUT, $USU_CONTRASENA, $USU_NOMBRE, $USU_CORREO, $USU_TELEFONO, $USU_PREG_SEGURIDAD, $USU_RESP_SEGURIDAD, $USU_ROL) VALUES " +
-                    "(1, '214297353', 'observador123', 'Vicente Ponce', 'v.ponce@rinconsur.cl', '987654321', '¿Cuál es el nombre de tu primera mascota?', 'princesa', 1), " +
-                    "(2, '228405566', 'admin123', 'Jefe Administrador', 'admin@rinconsur.cl', '911223344','¿En qué ciudad se conocieron tus padres?', 'santiago', 2)"
+            "INSERT INTO $TABLA_USUARIOS ($USU_ID, $USU_RUT, $USU_CONTRASENA, $USU_NOMBRE, $USU_CORREO, $USU_TELEFONO, $USU_PREG_SEGURIDAD, $USU_RESP_SEGURIDAD, $USU_ACTIVO, $USU_ROL) VALUES " +
+                    "(1, '214297353', 'observador123', 'Vicente Ponce', 'v.ponce@rinconsur.cl', '987654321', '¿Cuál es el nombre de tu primera mascota?', 'princesa', 1, 1), " +
+                    "(2, '228405566', 'admin123', 'Jefe Administrador', 'admin@rinconsur.cl', '911223344','¿En qué ciudad se conocieron tus padres?', 'santiago', 1, 2)"
 
         // Consultas base con INNER JOIN (igual que el profesor)
         private const val SQL_SELECT_USUARIOS =
@@ -167,6 +170,23 @@ class RinconSurDbHelper(context: Context) :
         return writableDatabase.update(TABLA_USUARIOS, valores, "$USU_ID = ?", arrayOf(id.toString()))
     }
 
+    // ---------------------------- GESTIÓN DE USUARIOS ----------------------------
+
+    fun insertarUsuario(rut: String, contrasena: String, nombre: String, correo: String, telefono: String, preguntaSeguridad: String, respuestaSeguridad: String, rolId: Long): Long {
+        val valores = ContentValues().apply {
+            put(USU_RUT, rut.trim())
+            put(USU_CONTRASENA, contrasena)
+            put(USU_NOMBRE, nombre.trim())
+            put(USU_CORREO, correo.trim())
+            put(USU_TELEFONO, telefono.trim())
+            put(USU_PREG_SEGURIDAD, preguntaSeguridad)
+            put(USU_RESP_SEGURIDAD, respuestaSeguridad.trim())
+            put(USU_ACTIVO, 1)
+            put(USU_ROL, rolId)
+        }
+        return writableDatabase.insert(TABLA_USUARIOS, null, valores)
+    }
+
     // ---------------------------- REGISTROS DE OBSERVACIÓN ----------------------------
 
     // CREATE -> INSERT (Para tu botón Guardar)
@@ -212,6 +232,7 @@ class RinconSurDbHelper(context: Context) :
                         nombreCompleto = cursor.getString(cursor.getColumnIndexOrThrow(USU_NOMBRE)),
                         correo = cursor.getString(cursor.getColumnIndexOrThrow(USU_CORREO)),
                         telefono = cursor.getString(cursor.getColumnIndexOrThrow(USU_TELEFONO)),
+                        activo = cursor.getInt(cursor.getColumnIndexOrThrow(USU_ACTIVO)) == 1,
                         rolId = cursor.getLong(cursor.getColumnIndexOrThrow(USU_ROL)),
                         rolNombre = cursor.getString(cursor.getColumnIndexOrThrow(ROL_NOMBRE)),
                         avatar = cursor.getColumnIndexOrThrow(USU_AVATAR).let { col ->

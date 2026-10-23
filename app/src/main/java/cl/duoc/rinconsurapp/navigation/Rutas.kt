@@ -4,6 +4,7 @@ sealed class Ruta(val ruta: String) {
     data object InicioSesion : Ruta("inicio_sesion")
     data object Perfil : Ruta("perfil")
 
+    // Ruta de los Usuarios para restablecer contraseña
     data object RestablecerContrasena : Ruta("restablecer_contrasena")
 
     // Rutas del Observador
@@ -14,4 +15,8 @@ sealed class Ruta(val ruta: String) {
     // Rutas del Administrador
     data object DashboardAdmin : Ruta("dashboard_admin")
     data object HistorialAdmin : Ruta("historial_admin")
+
+    data object CrearUsuario : Ruta("crear_usuario")
+
+    data object GestionUsuarios : Ruta("gestion_usuarios")
 }

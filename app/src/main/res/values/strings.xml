@@ -128,4 +128,19 @@
     <string name="historial_observador_vacio">Todavía no tienes observaciones registradas.</string>
     <string name="historial_observador_total">Mis registros: %1$d</string>
 
+    <!-- Gestion de Usuarios -->
+    <string name="menu_crear_usuario">Crear Usuario</string>
+    <string name="menu_gestion_usuarios">Gestionar Usuarios</string>
+
+    <!-- Pantalla: Crear Usuario -->
+    <string name="titulo_crear_usuario">Crear Usuario</string>
+    <string name="subtitulo_crear_usuario">Ingrese los datos del nuevo usuario:</string>
+    <string name="etiqueta_nombre">Nombre y Apellido</string>
+    <string name="etiqueta_rol">Rol del Usuario</string>
+    <string name="rol_observador">Observador</string>
+    <string name="rol_administrador">Administrador</string>
+    <string name="btn_crear_usuario">Crear Usuario</string>
+    <string name="msg_usuario_creado">¡Usuario creado con éxito!</string>
+    <string name="btn_aceptar">Aceptar</string>
+
 </resources>
