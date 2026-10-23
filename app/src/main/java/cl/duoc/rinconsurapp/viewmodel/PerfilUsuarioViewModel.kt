@@ -1,7 +1,10 @@
 package cl.duoc.rinconsurapp.viewmodel
 
 import android.app.Application
+import android.graphics.Bitmap
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
+import cl.duoc.rinconsurapp.data.ConvertidorImagen
 import cl.duoc.rinconsurapp.data.RinconSurDbHelper
 import cl.duoc.rinconsurapp.data.SesionPreferencias
 import cl.duoc.rinconsurapp.model.PerfilUsuarioUiState
@@ -22,26 +25,45 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
         cargarUsuarioDeSesion()
     }
 
-    fun cargarUsuarioDeSesion() {
+    private fun obtenerIdActivo(): Long {
         val idGuardado = sesion.leer()
-        // Si no hay sesión activa aún en pruebas, cargamos el ID 1L (Observador) por defecto
-        val idBuscar = if (idGuardado != SesionPreferencias.SIN_SESION) idGuardado else 1L
-        val usuario = db.buscarUsuarioPorId(idBuscar)
+        return if (idGuardado != SesionPreferencias.SIN_SESION) idGuardado else 1L
+    }
+
+    fun cargarUsuarioDeSesion() {
+        val usuario = db.buscarUsuarioPorId(obtenerIdActivo())
 
         if (usuario != null) {
             _uiState.update {
                 it.copy(
                     nombreCompleto = usuario.nombreCompleto,
                     rut = usuario.rut,
-                    cargo = usuario.rolNombre, // Viene del INNER JOIN con la tabla roles
+                    cargo = usuario.rolNombre,
                     telefonoContacto = usuario.telefono,
                     correoContacto = usuario.correo,
+                    avatar = usuario.avatar,
                     esValido = true,
                     informacionModificadaExitosamente = false,
                     cerrarSesionExitoso = false
                 )
             }
         }
+    }
+
+    fun cambiarAvatarDesdeCamara(foto: Bitmap) {
+        guardarAvatar(ConvertidorImagen.aBytes(foto))
+    }
+
+    fun cambiarAvatarDesdeGaleria(uri: Uri) {
+        val imagen = ConvertidorImagen.desdeUri(getApplication(), uri) ?: return
+        guardarAvatar(ConvertidorImagen.aBytes(imagen))
+    }
+
+    private fun guardarAvatar(bytes: ByteArray) {
+        val idUsuario = obtenerIdActivo()
+        db.actualizarAvatar(idUsuario, bytes)
+        val usuarioActualizado = db.buscarUsuarioPorId(idUsuario)
+        _uiState.update { it.copy(avatar = usuarioActualizado?.avatar) }
     }
 
     fun alCambiarTelefono(nuevoTelefono: String) {
@@ -86,9 +108,7 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
     fun guardarCambios() {
         val estado = _uiState.value
         if (estado.esValido) {
-            val idGuardado = sesion.leer()
-            val idActualizar = if (idGuardado != SesionPreferencias.SIN_SESION) idGuardado else 1L
-            // UPDATE real en SQLite
+            val idActualizar = obtenerIdActivo()
             db.actualizarContactoUsuario(idActualizar, estado.correoContacto.trim(), estado.telefonoContacto)
             _uiState.update { it.copy(informacionModificadaExitosamente = true) }
         }

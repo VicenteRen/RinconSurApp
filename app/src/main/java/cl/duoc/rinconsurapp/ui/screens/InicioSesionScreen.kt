@@ -1,5 +1,7 @@
 package cl.duoc.rinconsurapp.ui.screens
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
@@ -9,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,6 +60,13 @@ fun InicioSesionContent(
     alIniciarSesion: () -> Unit,
     onOlvideContrasena: () -> Unit
 ) {
+
+    val logoRes = if (isSystemInDarkTheme()) {
+        R.drawable.logo_rincon_sur_tema_oscuro
+    } else {
+        R.drawable.logo_rincon_sur
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -64,12 +75,13 @@ fun InicioSesionContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = stringResource(id = R.string.app_name),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 32.dp)
+        Image(
+            painter = painterResource(id = logoRes),
+            contentDescription = "Logo Rincón Sur",
+            modifier = Modifier
+                .size(350.dp)
+                .padding(bottom = 16.dp),
+            contentScale = ContentScale.Fit
         )
 
         TarjetaSeccion(titulo = stringResource(id = R.string.titulo_inicio_sesion)) {
