@@ -156,7 +156,10 @@ class RinconSurDbHelper(context: Context) :
             )
             return filasActualizadas > 0
         }
+
         return false
+    }
+
     fun actualizarAvatar(id: Long, avatar: ByteArray): Int {
         val valores = ContentValues().apply {
             put(USU_AVATAR, avatar)
