@@ -143,4 +143,12 @@
     <string name="msg_usuario_creado">¡Usuario creado con éxito!</string>
     <string name="btn_aceptar">Aceptar</string>
 
+    <!-- Pantalla: Ver Usuarios -->
+    <string name="titulo_gestion_usuarios">Gestión de Usuarios</string>
+    <string name="dialog_eliminar_usuario_titulo">Eliminar Usuario</string>
+    <string name="dialog_eliminar_usuario_msg">¿Estás seguro de que deseas eliminar a este usuario?</string>
+    <string name="btn_eliminar">Eliminar</string>
+    <string name="msg_usuario_eliminado">Usuario eliminado con éxito.</string>
+    <string name="lista_vacia_usuarios">No hay usuarios activos registrados en el sistema.</string>
+
 </resources>
