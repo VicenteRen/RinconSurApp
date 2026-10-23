@@ -21,6 +21,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import cl.duoc.rinconsurapp.ui.theme.Primario
 import kotlinx.coroutines.launch
+import androidx.compose.material3.ButtonDefaults
+import cl.duoc.rinconsurapp.ui.theme.PrimarioOscuro
+import androidx.compose.ui.res.stringResource
+import cl.duoc.rinconsurapp.R
 
 @Composable
 fun DashboardAdminScreen(
@@ -48,12 +52,12 @@ fun DashboardAdminContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Rincón Sur") }, // o el título que ella puso en Historial
+                title = { Text(stringResource(R.string.dashboard_nombre_app)) }, // o el título que ella puso en Historial
                 navigationIcon = {
                     IconButton(onClick = onAbrirMenu) {
                         Icon(
                             painter = androidx.compose.ui.res.painterResource(cl.duoc.rinconsurapp.R.drawable.ic_menu),
-                            contentDescription = "Abrir menú"
+                            contentDescription = stringResource(R.string.dashboard_abrir_menu)
                         )
                     }
                 },
@@ -76,7 +80,7 @@ fun DashboardAdminContent(
                     .padding(paddingInterno),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Acceso exclusivo para administradores")
+                Text(stringResource(R.string.dashboard_admin_acceso))
             }
         } else {
             Column(
@@ -88,12 +92,12 @@ fun DashboardAdminContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    "Dashboard de recuentos",
+                    stringResource(R.string.dashboard_admin_titulo),
                     style = MaterialTheme.typography.headlineSmall
                 )
 
                 Text(
-                    "Estadísticas globales de observación",
+                    stringResource(R.string.dashboard_admin_subtitulo),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
@@ -101,13 +105,13 @@ fun DashboardAdminContent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     TarjetaDato(
-                        "Observados",
+                        stringResource(R.string.dashboard_observados),
                         estado.totalRegistros.toString(),
                         Modifier.weight(1f)
                     )
 
                     TarjetaDato(
-                        "Visitas",
+                        stringResource(R.string.dashboard_visitas),
                         estado.totalVisitas.toString(),
                         Modifier.weight(1f)
                     )
@@ -117,22 +121,30 @@ fun DashboardAdminContent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     TarjetaDato(
-                        "Tránsito",
+                        stringResource(R.string.dashboard_transito),
                         estado.totalTransito.toString(),
                         Modifier.weight(1f)
                     )
 
                     TarjetaDato(
-                        "No determinado",
+                        stringResource(R.string.dashboard_no_determinado),
                         estado.totalNoDeterminado.toString(),
                         Modifier.weight(1f)
                     )
                 }
 
-                val totalClasificados = estado.totalVisitas + estado.totalTransito
+
+
+                val totalClasificados = estado.totalRegistros
 
                 val porcentajeVisitas = if (totalClasificados > 0) {
                     estado.totalVisitas.toFloat() / totalClasificados * 100f
+                } else {
+                    null
+                }
+
+                val porcentajeNoDeterminado = if (totalClasificados > 0) {
+                    estado.totalNoDeterminado.toFloat() / totalClasificados * 100f
                 } else {
                     null
                 }
@@ -145,7 +157,7 @@ fun DashboardAdminContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            "Comportamiento observado",
+                            stringResource(R.string.dashboard_comportamiento),
                             style = MaterialTheme.typography.titleMedium
                         )
 
@@ -153,7 +165,7 @@ fun DashboardAdminContent(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Tránsito")
+                                Text(stringResource(R.string.dashboard_transito))
 
                                 Text(
                                     porcentajeTransito?.let {
@@ -162,14 +174,14 @@ fun DashboardAdminContent(
                                             "%.1f %%",
                                             it
                                         )
-                                    } ?: "Sin datos",
+                                    } ?: stringResource(R.string.dashboard_sin_datos),
                                     style = MaterialTheme.typography.headlineSmall,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
 
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Visitas")
+                                Text(stringResource(R.string.dashboard_visitas))
 
                                 Text(
                                     porcentajeVisitas?.let {
@@ -178,11 +190,27 @@ fun DashboardAdminContent(
                                             "%.1f %%",
                                             it
                                         )
-                                    } ?: "Sin datos",
+                                    } ?: stringResource(R.string.dashboard_sin_datos),
                                     style = MaterialTheme.typography.headlineSmall,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
+                        }
+
+                        Column {
+                            Text(stringResource(R.string.dashboard_no_determinado))
+
+                            Text(
+                                porcentajeNoDeterminado?.let {
+                                    String.format(
+                                        Locale.forLanguageTag("es-CL"),
+                                        "%.1f %%",
+                                        it
+                                    )
+                                } ?: stringResource(R.string.dashboard_sin_datos),
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
                     }
                 }
@@ -193,7 +221,7 @@ fun DashboardAdminContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            "Registros por rango etario",
+                            stringResource(R.string.dashboard_rango_etario),
                             style = MaterialTheme.typography.titleMedium
                         )
 
@@ -209,7 +237,7 @@ fun DashboardAdminContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            "Distribución por clasificación",
+                            stringResource(R.string.dashboard_distribucion),
                             style = MaterialTheme.typography.titleMedium
                         )
 
@@ -221,20 +249,26 @@ fun DashboardAdminContent(
                     }
                 }
 
-
+                val mensajeActualizado = stringResource(
+                    R.string.dashboard_estadisticas_actualizadas
+                )
                 Button(
                     onClick = {
                         onActualizar()
 
                         scope.launch {
                             snackbarHostState.showSnackbar(
-                                "Estadísticas actualizadas"
+                                mensajeActualizado
                             )
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimarioOscuro,
+                        contentColor = Color.White
+                    )
                 ) {
-                    Text("Actualizar estadísticas")
+                    Text(stringResource(R.string.dashboard_actualizar_estadisticas))
                 }
 
             }
