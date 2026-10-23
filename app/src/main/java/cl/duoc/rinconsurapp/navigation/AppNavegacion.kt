@@ -31,6 +31,7 @@ import cl.duoc.rinconsurapp.R
 import cl.duoc.rinconsurapp.data.RinconSurDbHelper
 import cl.duoc.rinconsurapp.data.SesionPreferencias
 import cl.duoc.rinconsurapp.model.Rol
+import cl.duoc.rinconsurapp.ui.screens.CrearUsuarioScreen
 import cl.duoc.rinconsurapp.ui.screens.DashboardAdminScreen
 import cl.duoc.rinconsurapp.ui.screens.DashboardObservadorScreen
 import cl.duoc.rinconsurapp.ui.screens.HistorialAdminScreen
@@ -46,7 +47,6 @@ import kotlinx.coroutines.launch
 fun AppNavegacion() {
     val navController = rememberNavController()
     val context = LocalContext.current
-
     val db = remember { RinconSurDbHelper(context) }
     val sesion = remember { SesionPreferencias(context) }
 
@@ -122,7 +122,6 @@ fun AppNavegacion() {
                 )
                 HorizontalDivider()
 
-                // --- OPCIONES EXCLUSIVAS DEL OBSERVADOR ---
                 if (usuarioActual?.rolId == Rol.ID_OBSERVADOR) {
                     NavigationDrawerItem(
                         label = { Text(stringResource(R.string.titulo_observador)) },
@@ -174,7 +173,6 @@ fun AppNavegacion() {
                     )
                 }
 
-                // --- OPCIONES EXCLUSIVAS DEL ADMINISTRADOR ---
                 if (usuarioActual?.rolId == Rol.ID_ADMIN) {
                     NavigationDrawerItem(
                         label = { Text(stringResource(R.string.menu_dashboard_global)) },
@@ -208,16 +206,47 @@ fun AppNavegacion() {
                             }
                         }
                     )
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.menu_crear_usuario)) },
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_agregar_usuario),
+                                contentDescription = null
+                            )
+                        },
+                        selected = rutaActual == Ruta.CrearUsuario.ruta,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate(Ruta.CrearUsuario.ruta) {
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.menu_gestion_usuarios)) },
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_ver_usuarios),
+                                contentDescription = null
+                            )
+                        },
+                        selected = rutaActual == Ruta.GestionUsuarios.ruta,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate(Ruta.GestionUsuarios.ruta) {
+                                launchSingleTop = true
+                            }
+                        }
+                    )
                 }
 
-                // --- OPCIONES COMUNES (PERFIL Y CERRAR SESIÓN) ---
                 if (usuarioActual != null) {
                     HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.espacioChico))
                     NavigationDrawerItem(
                         label = { Text(stringResource(R.string.titulo_mi_perfil)) },
                         icon = {
                             Icon(
-                                painter = painterResource(R.drawable.ic_solo), // o R.drawable.ic_perfil
+                                painter = painterResource(R.drawable.ic_solo),
                                 contentDescription = null
                             )
                         },
@@ -293,12 +322,18 @@ fun AppNavegacion() {
                     onCerrarSesion = ejecutarCierreSesion
                 )
             }
-
-            // 5. Pantalla del formulario de restablecer contraseña
             composable(Ruta.RestablecerContrasena.ruta) {
                 RestablecerContrasenaScreen(
                     onVolver = { navController.popBackStack() }
                 )
+            }
+            composable(Ruta.CrearUsuario.ruta) {
+                CrearUsuarioScreen(
+                    onVolver = { navController.popBackStack() }
+                )
+            }
+            composable(Ruta.GestionUsuarios.ruta) {
+                // GestionUsuariosScreen(onVolver = { navController.popBackStack() })
             }
         }
     }

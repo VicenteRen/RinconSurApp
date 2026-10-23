@@ -9,5 +9,6 @@ data class Usuario(
     val telefono: String,
     val rolId: Long = Rol.ID_OBSERVADOR,
     val rolNombre: String = "", // Llega gracias al INNER JOIN con la tabla roles
-    val avatar: ByteArray? = null
+    val avatar: ByteArray? = null,
+    val activo: Boolean = true
 )

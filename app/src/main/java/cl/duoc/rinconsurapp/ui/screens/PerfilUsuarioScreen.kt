@@ -259,7 +259,7 @@ fun PerfilUsuarioContent(
                         valor = uiState.telefonoContacto,
                         onValorCambia = alCambiarTelefono,
                         etiqueta = stringResource(id = R.string.etiqueta_telefono),
-                        icono = android.R.drawable.ic_menu_call,
+                        icono = R.drawable.ic_telefono,
                         error = uiState.errorTelefono
                     )
 
