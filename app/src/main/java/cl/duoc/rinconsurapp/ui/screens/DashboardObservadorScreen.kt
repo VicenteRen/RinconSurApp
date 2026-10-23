@@ -21,6 +21,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import cl.duoc.rinconsurapp.ui.theme.Primario
 import kotlinx.coroutines.launch
+import androidx.compose.material3.ButtonDefaults
+import cl.duoc.rinconsurapp.ui.theme.PrimarioOscuro
+import androidx.compose.ui.res.stringResource
+import cl.duoc.rinconsurapp.R
 
 @Composable
 fun DashboardObservadorScreen(
@@ -48,12 +52,14 @@ fun DashboardObservadorContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Rincón Sur") }, // o el título que ella puso en Historial
+                title = {
+                    Text(stringResource(R.string.dashboard_nombre_app))
+                },
                 navigationIcon = {
                     IconButton(onClick = onAbrirMenu) {
                         Icon(
                             painter = androidx.compose.ui.res.painterResource(cl.duoc.rinconsurapp.R.drawable.ic_menu),
-                            contentDescription = "Abrir menú"
+                            contentDescription = stringResource(R.string.dashboard_abrir_menu)
                         )
                     }
                 },
@@ -76,7 +82,7 @@ fun DashboardObservadorContent(
                     .padding(paddingInterno),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Acceso exclusivo para observadores")
+                Text(stringResource(R.string.dashboard_observador_acceso))
             }
         } else {
             Column(
@@ -88,12 +94,12 @@ fun DashboardObservadorContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    "Mi Dashboard de recuentos",
+                    stringResource(R.string.dashboard_observador_titulo),
                     style = MaterialTheme.typography.headlineSmall
                 )
 
                 Text(
-                    "Estadísticas de mis observaciones",
+                    stringResource(R.string.dashboard_observador_subtitulo),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
@@ -101,13 +107,13 @@ fun DashboardObservadorContent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     TarjetaDatoObservador(
-                        "Observados",
+                        stringResource(R.string.dashboard_observados),
                         estado.totalRegistros.toString(),
                         Modifier.weight(1f)
                     )
 
                     TarjetaDatoObservador(
-                        "Visitas",
+                        stringResource(R.string.dashboard_visitas),
                         estado.totalVisitas.toString(),
                         Modifier.weight(1f)
                     )
@@ -117,13 +123,13 @@ fun DashboardObservadorContent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     TarjetaDatoObservador(
-                        "Tránsito",
+                        stringResource(R.string.dashboard_transito),
                         estado.totalTransito.toString(),
                         Modifier.weight(1f)
                     )
 
                     TarjetaDatoObservador(
-                        "No determinado",
+                        stringResource(R.string.dashboard_no_determinado),
                         estado.totalNoDeterminado.toString(),
                         Modifier.weight(1f)
                     )
@@ -135,7 +141,7 @@ fun DashboardObservadorContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            "Comportamiento observado",
+                            stringResource(R.string.dashboard_comportamiento),
                             style = MaterialTheme.typography.titleMedium
                         )
 
@@ -143,7 +149,7 @@ fun DashboardObservadorContent(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Tránsito")
+                                Text(stringResource(R.string.dashboard_transito))
 
                                 Text(
                                     formatoPorcentajeObservador(
@@ -155,7 +161,7 @@ fun DashboardObservadorContent(
                             }
 
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Visitas")
+                                Text(stringResource(R.string.dashboard_visitas))
 
                                 Text(
                                     formatoPorcentajeObservador(
@@ -166,6 +172,23 @@ fun DashboardObservadorContent(
                                 )
                             }
                         }
+
+                        Column {
+                            Text(stringResource(R.string.dashboard_no_determinado))
+
+                            val porcentajeNoDeterminado = if (estado.totalRegistros > 0) {
+                                estado.totalNoDeterminado.toFloat() /
+                                        estado.totalRegistros * 100f
+                            } else {
+                                null
+                            }
+
+                            Text(
+                                formatoPorcentajeObservador(porcentajeNoDeterminado),
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
 
@@ -175,7 +198,7 @@ fun DashboardObservadorContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            "Mis registros por rango etario",
+                            stringResource(R.string.dashboard_observador_rango_etario),
                             style = MaterialTheme.typography.titleMedium
                         )
 
@@ -191,7 +214,7 @@ fun DashboardObservadorContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            "Mis registros por clasificación",
+                            stringResource(R.string.dashboard_observador_clasificacion),
                             style = MaterialTheme.typography.titleMedium
                         )
 
@@ -203,25 +226,35 @@ fun DashboardObservadorContent(
                     }
                 }
 
+                val mensajeActualizado = stringResource(
+                    R.string.dashboard_observador_estadisticas_actualizadas
+                )
+
                 Button(
                     onClick = {
                         onActualizar()
 
                         scope.launch {
                             snackbarHostState.showSnackbar(
-                                "Estadísticas actualizadas correctamente"
+                                mensajeActualizado
                             )
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimarioOscuro,
+                        contentColor = Color.White
+
+                    )
                 ) {
-                    Text("Actualizar estadísticas")
+                    Text(stringResource(R.string.dashboard_actualizar_estadisticas))
                 }
             }
         }
     }
 }
 
+@Composable
 private fun formatoPorcentajeObservador(valor: Float?): String {
     return valor?.let {
         String.format(
@@ -229,7 +262,7 @@ private fun formatoPorcentajeObservador(valor: Float?): String {
             "%.1f %%",
             it
         )
-    } ?: "Sin datos"
+    } ?: stringResource(R.string.dashboard_sin_datos)
 }
 
 @Composable

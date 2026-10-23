@@ -57,12 +57,12 @@ class RegistroObservacionViewModel(application: Application) : AndroidViewModel(
         _uiState.update { it.copy(tieneComprasExternas = tiene, registroExitoso = false) }
     }
 
-    fun onRegistrar() {
+    fun onRegistrar(): Boolean {
         val estadoActual = _uiState.value
 
         val idGuardado = sesion.leer()
         val idUsuarioActivo = if (idGuardado != SesionPreferencias.SIN_SESION) idGuardado else 1L
-        val horaActual = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+        val fechaHoraActual = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
 
         val nuevoRegistro = RegistroObservacion(
             clasificacion = estadoActual.clasificacion.etiqueta,
@@ -70,11 +70,15 @@ class RegistroObservacionViewModel(application: Application) : AndroidViewModel(
             compania = estadoActual.compania.etiqueta,
             tieneComprasExternas = estadoActual.tieneComprasExternas,
             accesoDestino = estadoActual.accesoDestino.etiqueta, // Siempre guarda el acceso actual
-            fechaHora = horaActual,
+            fechaHora = fechaHoraActual,
             usuarioId = idUsuarioActivo
         )
 
-        db.insertarRegistro(nuevoRegistro)
+        val idRegistro = db.insertarRegistro(nuevoRegistro)
+
+        if (idRegistro == -1L) {
+            return false
+        }
 
         // Reinicia el formulario para la siguiente persona, pero MANTIENE el nombre y la puerta actual
         _uiState.value = RegistroObservacionUiState(
@@ -82,6 +86,7 @@ class RegistroObservacionViewModel(application: Application) : AndroidViewModel(
             accesoDestino = estadoActual.accesoDestino,
             registroExitoso = true
         )
+        return true
     }
 
     fun onLimpiar() {

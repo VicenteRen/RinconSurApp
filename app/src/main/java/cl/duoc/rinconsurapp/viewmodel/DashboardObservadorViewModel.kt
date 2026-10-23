@@ -47,7 +47,7 @@ class DashboardObservadorViewModel(application: Application) :
             it.clasificacion == Clasificacion.NO_DETERMINADO.etiqueta
         }
 
-        val totalClasificados = visitas + transito
+        val totalClasificados = visitas + transito + noDeterminado
 
         val porcentajeVisitas = if (totalClasificados > 0) {
             visitas.toFloat() / totalClasificados * 100f

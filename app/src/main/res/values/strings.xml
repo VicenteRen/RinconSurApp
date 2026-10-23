@@ -77,4 +77,55 @@
     <string name="permiso_camara_denegado">Permiso de cámara denegado. Puedes activarlo en Ajustes.</string>
     <string name="permiso_galeria_denegado">Permiso de galería denegado. Puedes activarlo en Ajustes.</string>
     <string name="btn_ajustes">Ajustes</string>
+
+    <!-- Dashboard Administrador -->
+    <string name="dashboard_admin_acceso">Acceso exclusivo para administradores</string>
+    <string name="dashboard_admin_titulo">Dashboard de recuentos</string>
+    <string name="dashboard_admin_subtitulo">Estadísticas globales de observación</string>
+    <string name="dashboard_observados">Observados</string>
+    <string name="dashboard_visitas">Visitas</string>
+    <string name="dashboard_transito">Tránsito</string>
+    <string name="dashboard_no_determinado">No determinado</string>
+    <string name="dashboard_comportamiento">Comportamiento observado</string>
+    <string name="dashboard_sin_datos">Sin datos</string>
+    <string name="grafico_torta_sin_datos">Sin datos para mostrar</string>
+    <string name="dashboard_rango_etario">Registros por rango etario</string>
+    <string name="dashboard_distribucion">Distribución por clasificación</string>
+    <string name="dashboard_actualizar_estadisticas">Actualizar estadísticas</string>
+    <string name="dashboard_estadisticas_actualizadas">Estadísticas actualizadas</string>
+    <string name="dashboard_abrir_menu">Abrir menú</string>
+    <string name="dashboard_nombre_app">Rincón Sur</string>
+
+    <!-- Dashboard Observador -->
+    <string name="dashboard_observador_acceso">Acceso exclusivo para observadores</string>
+    <string name="dashboard_observador_titulo">Mi Dashboard de recuentos</string>
+    <string name="dashboard_observador_subtitulo">Estadísticas de mis observaciones</string>
+    <string name="dashboard_observador_rango_etario">Mis registros por rango etario</string>
+    <string name="dashboard_observador_clasificacion">Mis registros por clasificación</string>
+    <string name="dashboard_observador_estadisticas_actualizadas">Estadísticas actualizadas correctamente</string>
+
+    <!-- Historial Administrador -->
+    <string name="historial_admin_titulo">Historial de observaciones</string>
+    <string name="historial_admin_acceso">Acceso exclusivo para administradores</string>
+    <string name="historial_sin_registros">Todavía no hay observaciones registradas.</string>
+    <string name="historial_total_registros">Total de registros: %1$d</string>
+    <string name="historial_rango_etario">Rango etario: %1$s</string>
+    <string name="historial_compania">Compañía: %1$s</string>
+    <string name="historial_destino">Destino: %1$s</string>
+    <string name="historial_fecha_hora">Fecha y hora: %1$s</string>
+    <string name="historial_registrado_por">Registrado por: %1$s</string>
+    <string name="historial_actualizar">Actualizar historial</string>
+    <string name="historial_actualizado">Historial actualizado</string>
+    <string name="historial_eliminar">Eliminar</string>
+    <string name="historial_eliminado">Observación eliminada correctamente</string>
+    <string name="historial_confirmar_titulo">Eliminar observación</string>
+    <string name="historial_confirmar_mensaje">¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.</string>
+    <string name="historial_cancelar">Cancelar</string>
+
+    <!-- Historial Observador -->
+    <string name="historial_observador_titulo">Mi historial de observaciones</string>
+    <string name="historial_observador_acceso">Acceso exclusivo para observadores</string>
+    <string name="historial_observador_vacio">Todavía no tienes observaciones registradas.</string>
+    <string name="historial_observador_total">Mis registros: %1$d</string>
+
 </resources>

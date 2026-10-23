@@ -30,7 +30,7 @@ fun GraficoBarrasDashboard(
     val maximo = (datos.values.maxOrNull() ?: 0).coerceAtLeast(1)
 
     val colorBarra = MaterialTheme.colorScheme.primary
-    val colorFondo = MaterialTheme.colorScheme.surfaceVariant
+    val colorFondo = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f)
 
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)

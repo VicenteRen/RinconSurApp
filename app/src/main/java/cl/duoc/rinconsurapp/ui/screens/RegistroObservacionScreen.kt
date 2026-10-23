@@ -27,6 +27,8 @@ import cl.duoc.rinconsurapp.ui.theme.Primario
 import cl.duoc.rinconsurapp.ui.theme.RinconSurAppTheme
 import cl.duoc.rinconsurapp.viewmodel.RegistroObservacionViewModel
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
+import cl.duoc.rinconsurapp.data.Vibracion
 
 @Composable
 fun RegistroObservacionScreen(
@@ -35,6 +37,7 @@ fun RegistroObservacionScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val mensajeExito = stringResource(R.string.msg_registro_exitoso)
@@ -50,9 +53,14 @@ fun RegistroObservacionScreen(
         onRangoEtarioSeleccionado = viewModel::onRangoEtarioSeleccionado,
         onLimpiar = viewModel::onLimpiar,
         onRegistrar = {
-            viewModel.onRegistrar()
-            scope.launch {
-                snackbarHostState.showSnackbar(mensajeExito)
+            val guardado = viewModel.onRegistrar()
+
+            if (guardado) {
+                Vibracion.vibrar(context)
+
+                scope.launch {
+                    snackbarHostState.showSnackbar(mensajeExito)
+                }
             }
         }
     )

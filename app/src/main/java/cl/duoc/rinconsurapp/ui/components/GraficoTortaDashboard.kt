@@ -9,8 +9,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import cl.duoc.rinconsurapp.ui.theme.Primario
+import cl.duoc.rinconsurapp.ui.theme.Secundario
+import cl.duoc.rinconsurapp.ui.theme.Acento
+import androidx.compose.foundation.background
+import androidx.compose.ui.Alignment
+import java.util.Locale
+import androidx.compose.ui.res.stringResource
+import cl.duoc.rinconsurapp.R
+
 
 @Composable
 fun GraficoTortaDashboard(
@@ -20,9 +28,9 @@ fun GraficoTortaDashboard(
 ) {
     val total = visitas + transito + noDeterminado
 
-    val colorVisitas = Color(0xFF9575CD)
-    val colorTransito = Color(0xFF4DB6AC)
-    val colorNoDeterminado = Color(0xFFFFB74D)
+    val colorVisitas = Primario
+    val colorTransito = Secundario
+    val colorNoDeterminado = Acento
 
     val progreso = remember(visitas, transito, noDeterminado) {
         Animatable(0f)
@@ -36,7 +44,7 @@ fun GraficoTortaDashboard(
     }
 
     if (total == 0) {
-        Text("Sin datos para mostrar")
+        Text(stringResource(R.string.grafico_torta_sin_datos))
     } else {
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -80,9 +88,55 @@ fun GraficoTortaDashboard(
                 }
             }
 
-            Text("Visitas: $visitas")
-            Text("Tránsito: $transito")
-            Text("No determinado: $noDeterminado")
+            // Leyenda del gráfico de torta
+            val categorias = listOf(
+                Triple(
+                    stringResource(R.string.dashboard_visitas),
+                    visitas,
+                    colorVisitas
+                ),
+                Triple(
+                    stringResource(R.string.dashboard_transito),
+                    transito,
+                    colorTransito
+                ),
+                Triple(
+                    stringResource(R.string.dashboard_no_determinado),
+                    noDeterminado,
+                    colorNoDeterminado
+                )
+            )
+
+            categorias.forEach { (nombre, cantidad, color) ->
+                val porcentaje = cantidad.toFloat() / total * 100f
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(14.dp)
+                            .background(color)
+                    )
+
+                    Text(
+                        text = nombre,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Text(
+                        text = "$cantidad (${
+                            String.format(
+                                Locale.forLanguageTag("es-CL"),
+                                "%.1f",
+                                porcentaje
+                            )
+                        } %)"
+                    )
+                }
+            }
         }
     }
 }

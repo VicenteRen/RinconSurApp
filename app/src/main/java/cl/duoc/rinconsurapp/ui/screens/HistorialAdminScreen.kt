@@ -19,6 +19,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import cl.duoc.rinconsurapp.ui.theme.Primario
 import kotlinx.coroutines.launch
+import androidx.compose.material3.ButtonDefaults
+import cl.duoc.rinconsurapp.ui.theme.PrimarioOscuro
+import androidx.compose.ui.res.stringResource
+import cl.duoc.rinconsurapp.R
 
 @Composable
 fun HistorialAdminScreen(
@@ -52,15 +56,19 @@ fun HistorialAdminContent(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val mensajeActualizado = stringResource(R.string.historial_actualizado)
+    val mensajeEliminado = stringResource(R.string.historial_eliminado)
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Historial de observaciones") },
+                title = {
+                    Text(stringResource(R.string.historial_admin_titulo))
+                },
                 navigationIcon = {
                     IconButton(onClick = onAbrirMenu) {
                         Icon(
                             painter = androidx.compose.ui.res.painterResource(cl.duoc.rinconsurapp.R.drawable.ic_menu),
-                            contentDescription = "Abrir menú"
+                            contentDescription = stringResource(R.string.dashboard_abrir_menu)
                         )
                     }
                 },
@@ -83,13 +91,16 @@ fun HistorialAdminContent(
                 .padding(16.dp)
         ) {
             if (!autorizado) {
-                Text("Acceso exclusivo para administradores")
+                Text(stringResource(R.string.historial_admin_acceso))
             } else {
                 if (registros.isEmpty()) {
-                    Text("Todavía no hay observaciones registradas.")
+                    Text(stringResource(R.string.historial_sin_registros))
                 } else {
                     Text(
-                        text = "Total de registros: ${registros.size}",
+                        text = stringResource(
+                            R.string.historial_total_registros,
+                            registros.size
+                        ),
                         style = MaterialTheme.typography.titleMedium
                     )
 
@@ -109,7 +120,7 @@ fun HistorialAdminContent(
                                     if (eliminado) {
                                         scope.launch {
                                             snackbarHostState.showSnackbar(
-                                                "Observación eliminada correctamente"
+                                                mensajeEliminado
                                             )
                                         }
                                     }
@@ -128,13 +139,17 @@ fun HistorialAdminContent(
 
                         scope.launch {
                             snackbarHostState.showSnackbar(
-                                "Historial actualizado"
+                                mensajeActualizado
                             )
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimarioOscuro,
+                        contentColor = Color.White
+                    )
                 ) {
-                    Text("Actualizar historial")
+                    Text(stringResource(R.string.historial_actualizar))
                 }
             }
         }
@@ -162,22 +177,49 @@ private fun TarjetaRegistroAdmin(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            Text("Rango etario: ${registro.rangoEtario}")
-            Text("Compañía: ${registro.compania}")
+            Text(
+                stringResource(
+                    R.string.historial_rango_etario,
+                    registro.rangoEtario
+                )
+            )
+
+            Text(
+                stringResource(
+                    R.string.historial_compania,
+                    registro.compania
+                )
+            )
 
             if (registro.accesoDestino != null) {
-                Text("Destino: ${registro.accesoDestino}")
+                Text(
+                    stringResource(
+                        R.string.historial_destino,
+                        registro.accesoDestino
+                    )
+                )
             }
 
-            Text("Hora: ${registro.fechaHora}")
-            Text("Registrado por: ${registro.nombreObservador}")
+            Text(
+                stringResource(
+                    R.string.historial_fecha_hora,
+                    registro.fechaHora
+                )
+            )
+
+            Text(
+                stringResource(
+                    R.string.historial_registrado_por,
+                    registro.nombreObservador
+                )
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedButton(
                 onClick = { mostrarConfirmacion = true }
             ) {
-                Text("Eliminar")
+                Text(stringResource(R.string.historial_eliminar))
             }
         }
     }
@@ -185,9 +227,11 @@ private fun TarjetaRegistroAdmin(
     if (mostrarConfirmacion) {
         AlertDialog(
             onDismissRequest = { mostrarConfirmacion = false },
-            title = { Text("Eliminar observación") },
+            title = {
+                Text(stringResource(R.string.historial_confirmar_titulo))
+            },
             text = {
-                Text("¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.")
+                Text(stringResource(R.string.historial_confirmar_mensaje))
             },
             confirmButton = {
                 TextButton(
@@ -196,14 +240,14 @@ private fun TarjetaRegistroAdmin(
                         alEliminar(registro.id)
                     }
                 ) {
-                    Text("Eliminar")
+                    Text(stringResource(R.string.historial_eliminar))
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { mostrarConfirmacion = false }
                 ) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.historial_cancelar))
                 }
             }
         )

@@ -50,10 +50,10 @@ class DashboardAdminViewModel(
             it.clasificacion == Clasificacion.NO_DETERMINADO.etiqueta
         }
 
-        val determinados = transito + visitas
+        val total = transito + visitas + noDeterminado
 
-        val porcentaje = if (determinados > 0) {
-            transito.toFloat() / determinados * 100f
+        val porcentaje = if (total > 0) {
+            transito.toFloat() / total * 100f
         } else {
             null
         }
