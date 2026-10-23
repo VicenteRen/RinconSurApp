@@ -186,6 +186,16 @@ class RinconSurDbHelper(context: Context) :
         }
         return writableDatabase.insert(TABLA_USUARIOS, null, valores)
     }
+    // ---------------------------- VER USUARIOS --------------------------------
+    fun listarUsuariosActivos(): List<Usuario> =
+        consultarUsuarios("$SQL_SELECT_USUARIOS WHERE u.$USU_ACTIVO = 1 ORDER BY u.$USU_NOMBRE ASC", null)
+
+    fun eliminarUsuario(idUsuario: Long): Int {
+        val valores = ContentValues().apply {
+            put(USU_ACTIVO, 0)
+        }
+        return writableDatabase.update(TABLA_USUARIOS, valores, "$USU_ID = ?", arrayOf(idUsuario.toString()))
+    }
 
     // ---------------------------- REGISTROS DE OBSERVACIÓN ----------------------------
 

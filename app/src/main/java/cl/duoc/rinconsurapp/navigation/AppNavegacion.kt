@@ -34,6 +34,7 @@ import cl.duoc.rinconsurapp.model.Rol
 import cl.duoc.rinconsurapp.ui.screens.CrearUsuarioScreen
 import cl.duoc.rinconsurapp.ui.screens.DashboardAdminScreen
 import cl.duoc.rinconsurapp.ui.screens.DashboardObservadorScreen
+import cl.duoc.rinconsurapp.ui.screens.GestionUsuariosScreen
 import cl.duoc.rinconsurapp.ui.screens.HistorialAdminScreen
 import cl.duoc.rinconsurapp.ui.screens.HistorialObservadorScreen
 import cl.duoc.rinconsurapp.ui.screens.InicioSesionScreen
@@ -333,7 +334,7 @@ fun AppNavegacion() {
                 )
             }
             composable(Ruta.GestionUsuarios.ruta) {
-                // GestionUsuariosScreen(onVolver = { navController.popBackStack() })
+                GestionUsuariosScreen(onVolver = { navController.popBackStack() })
             }
         }
     }
