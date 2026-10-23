@@ -4,6 +4,8 @@ sealed class Ruta(val ruta: String) {
     data object InicioSesion : Ruta("inicio_sesion")
     data object Perfil : Ruta("perfil")
 
+    data object RestablecerContrasena : Ruta("restablecer_contrasena")
+
     // Rutas del Observador
     data object RegistroObservacion : Ruta("registro_observacion")
     data object DashboardObservador : Ruta("dashboard_observador")
