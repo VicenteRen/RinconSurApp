@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -26,6 +27,7 @@ import cl.duoc.rinconsurapp.viewmodel.InicioSesionViewModel
 @Composable
 fun InicioSesionScreen(
     onLoginExitoso: () -> Unit = {},
+    onOlvideContrasena: () -> Unit = {},
     viewModel: InicioSesionViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -40,7 +42,8 @@ fun InicioSesionScreen(
             if (viewModel.uiState.value.autenticado) {
                 onLoginExitoso()
             }
-        }
+        },
+        onOlvideContrasena = onOlvideContrasena
     )
 }
 
@@ -50,7 +53,8 @@ fun InicioSesionContent(
     alCambiarRut: (String) -> Unit,
     alCambiarContrasena: (String) -> Unit,
     alAlternarVisibilidad: () -> Unit,
-    alIniciarSesion: () -> Unit
+    alIniciarSesion: () -> Unit,
+    onOlvideContrasena: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -91,7 +95,19 @@ fun InicioSesionContent(
                 error = uiState.contrasenaError
             )
 
-            Spacer(modifier = Modifier.height(if (uiState.errorGeneral != null) 16.dp else 32.dp))
+
+            TextButton(
+                onClick = onOlvideContrasena,
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Text(
+                    text = stringResource(id = R.string.btn_olvide_contrasena),
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(if (uiState.errorGeneral != null) 4.dp else 16.dp))
 
             if (uiState.errorGeneral != null) {
                 Text(
@@ -133,7 +149,8 @@ fun InicioSesionPreview() {
             alCambiarRut = {},
             alCambiarContrasena = {},
             alAlternarVisibilidad = {},
-            alIniciarSesion = {}
+            alIniciarSesion = {},
+            onOlvideContrasena = {}
         )
     }
 }

@@ -14,7 +14,7 @@ class RinconSurDbHelper(context: Context) :
 
     companion object {
         private const val NOMBRE_BD = "rinconsur.db"
-        private const val VERSION_BD = 1
+        private const val VERSION_BD = 4
 
         // 1. Tabla ROLES
         private const val TABLA_ROLES = "roles"
@@ -30,6 +30,9 @@ class RinconSurDbHelper(context: Context) :
         private const val USU_CORREO = "correo"
         private const val USU_TELEFONO = "telefono"
         private const val USU_ROL = "id_rol"
+
+        private const val USU_PREG_SEGURIDAD = "pregunta_seguridad"
+        private const val USU_RESP_SEGURIDAD = "respuesta_seguridad"
 
         // 3. Tabla REGISTROS DE OBSERVACIÓN
         private const val TABLA_REGISTROS = "registros_observacion"
@@ -56,6 +59,8 @@ class RinconSurDbHelper(context: Context) :
                     "$USU_NOMBRE TEXT NOT NULL, " +
                     "$USU_CORREO TEXT NOT NULL, " +
                     "$USU_TELEFONO TEXT NOT NULL, " +
+                    "$USU_PREG_SEGURIDAD TEXT NOT NULL, " +
+                    "$USU_RESP_SEGURIDAD TEXT NOT NULL, " +
                     "$USU_ROL INTEGER NOT NULL REFERENCES $TABLA_ROLES($ROL_ID))"
 
         private const val SQL_CREAR_REGISTROS =
@@ -75,9 +80,9 @@ class RinconSurDbHelper(context: Context) :
                     "(1, 'Observador'), (2, 'Administrador')"
 
         private const val SQL_PRECARGAR_USUARIOS =
-            "INSERT INTO $TABLA_USUARIOS ($USU_ID, $USU_RUT, $USU_CONTRASENA, $USU_NOMBRE, $USU_CORREO, $USU_TELEFONO, $USU_ROL) VALUES " +
-                    "(1, '214297353', 'observador123', 'Vicente Ponce', 'v.ponce@rinconsur.cl', '987654321', 1), " +
-                    "(2, '228405566', 'admin123', 'Jefe Administrador', 'admin@rinconsur.cl', '911223344', 2)"
+            "INSERT INTO $TABLA_USUARIOS ($USU_ID, $USU_RUT, $USU_CONTRASENA, $USU_NOMBRE, $USU_CORREO, $USU_TELEFONO, $USU_PREG_SEGURIDAD, $USU_RESP_SEGURIDAD, $USU_ROL) VALUES " +
+                    "(1, '214297353', 'observador123', 'Vicente Ponce', 'v.ponce@rinconsur.cl', '987654321', '¿Cuál es el nombre de tu primera mascota?', 'princesa', 1), " +
+                    "(2, '228405566', 'admin123', 'Jefe Administrador', 'admin@rinconsur.cl', '911223344','¿En qué ciudad se conocieron tus padres?', 'santiago', 2)"
 
         // Consultas base con INNER JOIN (igual que el profesor)
         private const val SQL_SELECT_USUARIOS =
@@ -111,7 +116,7 @@ class RinconSurDbHelper(context: Context) :
         onCreate(db)
     }
 
-    // ---------------------------- USUARIOS (Login y Perfil) ----------------------------
+    // ---------------------------- USUARIOS (Login, Perfil y Recuperación) ----------------------------
 
     fun autenticar(rut: String, contrasena: String): Usuario? =
         consultarUsuarios(
@@ -129,6 +134,27 @@ class RinconSurDbHelper(context: Context) :
             put(USU_TELEFONO, nuevoTelefono)
         }
         return writableDatabase.update(TABLA_USUARIOS, valores, "$USU_ID = ?", arrayOf(id.toString()))
+    }
+
+    fun cambiarContrasena(rut: String, preguntaSeguridad: String, respuestaSeguridad: String, nuevaContrasena: String): Boolean {
+        val usuario = consultarUsuarios(
+            "$SQL_SELECT_USUARIOS WHERE u.$USU_RUT = ? AND u.$USU_PREG_SEGURIDAD = ? AND u.$USU_RESP_SEGURIDAD = ?",
+            arrayOf(rut.trim(), preguntaSeguridad, respuestaSeguridad.trim())
+        ).firstOrNull()
+
+        if (usuario != null) {
+            val valores = ContentValues().apply {
+                put(USU_CONTRASENA, nuevaContrasena)
+            }
+            val filasActualizadas = writableDatabase.update(
+                TABLA_USUARIOS,
+                valores,
+                "$USU_ID = ?",
+                arrayOf(usuario.id.toString())
+            )
+            return filasActualizadas > 0
+        }
+        return false
     }
 
     // ---------------------------- REGISTROS DE OBSERVACIÓN ----------------------------

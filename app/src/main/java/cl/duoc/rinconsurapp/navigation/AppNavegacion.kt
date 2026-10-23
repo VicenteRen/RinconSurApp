@@ -34,6 +34,7 @@ import cl.duoc.rinconsurapp.ui.screens.HistorialObservadorScreen
 import cl.duoc.rinconsurapp.ui.screens.InicioSesionScreen
 import cl.duoc.rinconsurapp.ui.screens.PerfilUsuarioScreen
 import cl.duoc.rinconsurapp.ui.screens.RegistroObservacionScreen
+import cl.duoc.rinconsurapp.ui.screens.RestablecerContrasenaScreen
 import cl.duoc.rinconsurapp.ui.theme.Dimens
 import kotlinx.coroutines.launch
 
@@ -222,6 +223,9 @@ fun AppNavegacion() {
                         navController.navigate(rutaDestino) {
                             popUpTo(Ruta.InicioSesion.ruta) { inclusive = true }
                         }
+                    },
+                    onOlvideContrasena = {
+                        navController.navigate(Ruta.RestablecerContrasena.ruta)
                     }
                 )
             }
@@ -250,6 +254,13 @@ fun AppNavegacion() {
                 PerfilUsuarioScreen(
                     onVolver = { navController.navigateUp() },
                     onCerrarSesion = ejecutarCierreSesion
+                )
+            }
+
+            // 5. Pantalla del formulario de restablecer contraseña
+            composable(Ruta.RestablecerContrasena.ruta) {
+                RestablecerContrasenaScreen(
+                    onVolver = { navController.popBackStack() }
                 )
             }
         }
