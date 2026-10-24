@@ -123,10 +123,11 @@ class RinconSurDbHelper(context: Context) :
 
     // ---------------------------- USUARIOS (Login, Perfil y Recuperación) ----------------------------
 
+    // 1. Evita que un usuario deshabilitado (activo = 0) pueda iniciar sesión
     fun autenticar(rut: String, contrasena: String): Usuario? =
         consultarUsuarios(
-            "$SQL_SELECT_USUARIOS WHERE u.$USU_RUT = ? AND u.$USU_CONTRASENA = ?",
-            arrayOf(rut, contrasena)
+            "$SQL_SELECT_USUARIOS WHERE u.$USU_RUT = ? AND u.$USU_CONTRASENA = ? AND u.$USU_ACTIVO = 1",
+            arrayOf(rut.trim(), contrasena)
         ).firstOrNull()
 
     fun buscarUsuarioPorId(id: Long): Usuario? =
@@ -172,20 +173,53 @@ class RinconSurDbHelper(context: Context) :
 
     // ---------------------------- GESTIÓN DE USUARIOS ----------------------------
 
-    fun insertarUsuario(rut: String, contrasena: String, nombre: String, correo: String, telefono: String, preguntaSeguridad: String, respuestaSeguridad: String, rolId: Long): Long {
+    fun insertarUsuario(
+        rut: String,
+        contrasena: String,
+        nombre: String,
+        correo: String,
+        telefono: String,
+        preguntaSeguridad: String,
+        respuestaSeguridad: String,
+        rolId: Long
+    ): Long {
+        val rutLimpio = rut.trim()
+
+        // Buscamos si el RUT ya existe en la tabla (activo o inactivo)
+        val usuarioExistente = consultarUsuarios(
+            "$SQL_SELECT_USUARIOS WHERE u.$USU_RUT = ?",
+            arrayOf(rutLimpio)
+        ).firstOrNull()
+
         val valores = ContentValues().apply {
-            put(USU_RUT, rut.trim())
+            put(USU_RUT, rutLimpio)
             put(USU_CONTRASENA, contrasena)
             put(USU_NOMBRE, nombre.trim())
             put(USU_CORREO, correo.trim())
             put(USU_TELEFONO, telefono.trim())
             put(USU_PREG_SEGURIDAD, preguntaSeguridad)
             put(USU_RESP_SEGURIDAD, respuestaSeguridad.trim())
-            put(USU_ACTIVO, 1)
+            put(USU_ACTIVO, 1) // Queda habilitado
             put(USU_ROL, rolId)
         }
-        return writableDatabase.insert(TABLA_USUARIOS, null, valores)
+
+        return when {
+            usuarioExistente == null -> {
+                writableDatabase.insert(TABLA_USUARIOS, null, valores)
+            }
+            !usuarioExistente.activo -> {
+                writableDatabase.update(
+                    TABLA_USUARIOS,
+                    valores,
+                    "$USU_ID = ?",
+                    arrayOf(usuarioExistente.id.toString())
+                )
+                usuarioExistente.id
+            }
+            else -> -1L
+        }
     }
+
     // ---------------------------- VER USUARIOS --------------------------------
     fun listarUsuariosActivos(): List<Usuario> =
         consultarUsuarios("$SQL_SELECT_USUARIOS WHERE u.$USU_ACTIVO = 1 ORDER BY u.$USU_NOMBRE ASC", null)
