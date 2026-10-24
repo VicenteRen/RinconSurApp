@@ -8,13 +8,19 @@ import android.database.sqlite.SQLiteOpenHelper
 import cl.duoc.rinconsurapp.model.RegistroObservacion
 import cl.duoc.rinconsurapp.model.Rol
 import cl.duoc.rinconsurapp.model.Usuario
+import java.security.MessageDigest
 
 class RinconSurDbHelper(context: Context) :
     SQLiteOpenHelper(context, NOMBRE_BD, null, VERSION_BD) {
 
     companion object {
         private const val NOMBRE_BD = "rinconsur.db"
-        private const val VERSION_BD = 5
+        private const val VERSION_BD = 7
+
+        fun encriptar(texto: String): String {
+            val bytes = MessageDigest.getInstance("SHA-256").digest(texto.toByteArray())
+            return bytes.joinToString("") { "%02x".format(it) }
+        }
 
         // 1. Tabla ROLES
         private const val TABLA_ROLES = "roles"
@@ -84,10 +90,10 @@ class RinconSurDbHelper(context: Context) :
             "INSERT INTO $TABLA_ROLES ($ROL_ID, $ROL_NOMBRE) VALUES " +
                     "(1, 'Observador'), (2, 'Administrador')"
 
-        private const val SQL_PRECARGAR_USUARIOS =
+        private val SQL_PRECARGAR_USUARIOS =
             "INSERT INTO $TABLA_USUARIOS ($USU_ID, $USU_RUT, $USU_CONTRASENA, $USU_NOMBRE, $USU_CORREO, $USU_TELEFONO, $USU_PREG_SEGURIDAD, $USU_RESP_SEGURIDAD, $USU_ACTIVO, $USU_ROL) VALUES " +
-                    "(1, '214297353', 'observador123', 'Vicente Ponce', 'v.ponce@rinconsur.cl', '987654321', '¿Cuál es el nombre de tu primera mascota?', 'princesa', 1, 1), " +
-                    "(2, '228405566', 'admin123', 'Jefe Administrador', 'admin@rinconsur.cl', '911223344','¿En qué ciudad se conocieron tus padres?', 'santiago', 1, 2)"
+                    "(1, '214297353', '${encriptar("observador123")}', 'Vicente Ponce', 'v.ponce@rinconsur.cl', '987654321', '¿Cuál es el nombre de tu primera mascota?', 'princesa', 1, 1), " +
+                    "(2, '228405566', '${encriptar("admin123")}', 'Jefe Administrador', 'admin@rinconsur.cl', '911223344', '¿En qué ciudad se conocieron tus padres?', 'santiago', 1, 2)"
 
         // Consultas base con INNER JOIN (igual que el profesor)
         private const val SQL_SELECT_USUARIOS =
@@ -126,7 +132,7 @@ class RinconSurDbHelper(context: Context) :
     fun autenticar(rut: String, contrasena: String): Usuario? =
         consultarUsuarios(
             "$SQL_SELECT_USUARIOS WHERE u.$USU_RUT = ? AND u.$USU_CONTRASENA = ?",
-            arrayOf(rut, contrasena)
+            arrayOf(rut, encriptar(contrasena))
         ).firstOrNull()
 
     fun buscarUsuarioPorId(id: Long): Usuario? =
@@ -149,7 +155,7 @@ class RinconSurDbHelper(context: Context) :
 
         if (usuario != null) {
             val valores = ContentValues().apply {
-                put(USU_CONTRASENA, nuevaContrasena)
+                put(USU_CONTRASENA, encriptar(nuevaContrasena))
             }
             val filasActualizadas = writableDatabase.update(
                 TABLA_USUARIOS,
@@ -175,7 +181,7 @@ class RinconSurDbHelper(context: Context) :
     fun insertarUsuario(rut: String, contrasena: String, nombre: String, correo: String, telefono: String, preguntaSeguridad: String, respuestaSeguridad: String, rolId: Long): Long {
         val valores = ContentValues().apply {
             put(USU_RUT, rut.trim())
-            put(USU_CONTRASENA, contrasena)
+            put(USU_CONTRASENA, encriptar(contrasena))
             put(USU_NOMBRE, nombre.trim())
             put(USU_CORREO, correo.trim())
             put(USU_TELEFONO, telefono.trim())
