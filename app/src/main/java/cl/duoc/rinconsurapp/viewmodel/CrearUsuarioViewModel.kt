@@ -64,9 +64,7 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
             if (!validarRutModulo11(nuevoRut)) {
                 error = "RUT inválido"
             } else {
-                val rutDuplicado = db.autenticar(nuevoRut, "cualquiera") != null ||
-                        db.buscarUsuarioPorId(1)?.rut == nuevoRut ||
-                        db.buscarUsuarioPorId(2)?.rut == nuevoRut
+                val rutDuplicado = db.listarUsuariosActivos().any { it.rut == nuevoRut }
 
                 if (rutDuplicado) {
                     error = "Este RUT ya está en uso"
@@ -106,7 +104,7 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
                 tieneLongitudValida = contrasena.length >= 8,
                 tieneNumero = contrasena.any { c -> c.isDigit() },
                 tieneMayuscula = contrasena.any { c -> c.isUpperCase() },
-                sinCaracteresEspeciales = contrasena.isNotEmpty() && contrasena.matches(Regex("^[a-zA-Z0-9]+$")),
+                sinCaracteresEspeciales = contrasena.isNotEmpty() && contrasena.all { it.isLetterOrDigit() },
                 contrasenaError = error
             )
         }
@@ -162,7 +160,7 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
             if (id > -1) {
                 _uiState.update { it.copy(creacionExitosa = true, errorGeneral = null) }
             } else {
-                _uiState.update { it.copy(errorGeneral = "El RUT ya existe en el sistema.") }
+                _uiState.update { it.copy(errorGeneral = "El RUT ya existe y está activo en el sistema.") }
             }
         } catch (e: Exception) {
             _uiState.update { it.copy(errorGeneral = "Error de base de datos.") }
