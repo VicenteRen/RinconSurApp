@@ -127,9 +127,12 @@ fun RegistroObservacionContent(
                             Acceso.A4 -> Color(0xFFE53935) // Rojo
                         }
 
-                        // Extraemos el código ("A1") y el nombre corto ("Principal")
                         val codigo = acceso.name // "A1", "A2", "A3", "A4"
-                        val nombreCorto = acceso.etiqueta.substringAfter("- ").replace("Acceso ", "")
+                        //val nombreCorto = acceso.etiqueta.substringAfter("- ").replace("Acceso ", "")
+                        val nombreCorto = when (val texto = acceso.etiqueta.substringAfter("- ").replace("Acceso ", "")) {
+                            "Estacionamiento" -> "Parking"
+                            else -> texto
+                        }
 
                         OutlinedCard(
                             onClick = { onAccesoDestinoSeleccionado(acceso) },
