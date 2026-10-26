@@ -25,7 +25,6 @@ class RegistroObservacionViewModel(application: Application) : AndroidViewModel(
         cargarNombreObservador()
     }
 
-    // Lee quién inició sesión en SQLite para poner su nombre en el título
     fun cargarNombreObservador() {
         val idGuardado = sesion.leer()
         val idUsuarioActivo = if (idGuardado != SesionPreferencias.SIN_SESION) idGuardado else 1L
@@ -41,7 +40,6 @@ class RegistroObservacionViewModel(application: Application) : AndroidViewModel(
     }
 
     fun onClasificacionSeleccionada(clasificacion: Clasificacion) {
-        // Ahora ya no borra el acceso, porque toda persona entra por un acceso
         _uiState.update { it.copy(clasificacion = clasificacion, registroExitoso = false) }
     }
 
@@ -69,7 +67,7 @@ class RegistroObservacionViewModel(application: Application) : AndroidViewModel(
             rangoEtario = estadoActual.rangoEtario.etiqueta,
             compania = estadoActual.compania.etiqueta,
             tieneComprasExternas = estadoActual.tieneComprasExternas,
-            accesoDestino = estadoActual.accesoDestino.etiqueta, // Siempre guarda el acceso actual
+            accesoDestino = estadoActual.accesoDestino.etiqueta,
             fechaHora = fechaHoraActual,
             usuarioId = idUsuarioActivo
         )
@@ -80,7 +78,6 @@ class RegistroObservacionViewModel(application: Application) : AndroidViewModel(
             return false
         }
 
-        // Reinicia el formulario para la siguiente persona, pero MANTIENE el nombre y la puerta actual
         _uiState.value = RegistroObservacionUiState(
             nombreObservador = estadoActual.nombreObservador,
             accesoDestino = estadoActual.accesoDestino,

@@ -26,9 +26,7 @@ class GestionUsuariosViewModel(application: Application) : AndroidViewModel(appl
         _uiState.update { it.copy(listaUsuarios = usuariosActivos) }
     }
 
-    // --- ELIMINAR ---
     fun confirmarEliminacion(usuario: Usuario) {
-        // Regla de Negocio: No eliminar al último administrador
         if (usuario.rolId == Rol.ID_ADMIN) {
             val cantidadAdmins = _uiState.value.listaUsuarios.count { it.rolId == Rol.ID_ADMIN }
             if (cantidadAdmins <= 1) {
@@ -55,7 +53,6 @@ class GestionUsuariosViewModel(application: Application) : AndroidViewModel(appl
         _uiState.update { it.copy(errorGlobal = null) }
     }
 
-    // --- EDITAR ---
     fun abrirDialogoEditar(usuario: Usuario) {
         _uiState.update {
             it.copy(
@@ -103,7 +100,6 @@ class GestionUsuariosViewModel(application: Application) : AndroidViewModel(appl
             return
         }
 
-        // Regla de Negocio: No se puede cambiar a un Administrador a otro rol
         if (usuario.rolId == Rol.ID_ADMIN && state.editRolSeleccionado != "Administrador") {
             _uiState.update { it.copy(editError = "No está permitido cambiar el rol de un Administrador.") }
             return

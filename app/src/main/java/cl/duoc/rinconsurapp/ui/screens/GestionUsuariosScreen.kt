@@ -140,7 +140,6 @@ fun GestionUsuariosContent(
             )
         }
 
-        // Diálogo para Editar
         if (uiState.mostrarDialogoEditar && uiState.usuarioAEditar != null) {
             val esAdmin = uiState.usuarioAEditar.rolNombre == "Administrador"
 
@@ -168,7 +167,7 @@ fun GestionUsuariosContent(
                             opciones = uiState.listaRoles,
                             seleccionActual = uiState.editRolSeleccionado,
                             onOpcionSeleccionada = onEditRolSeleccionado,
-                            habilitado = !esAdmin // Si es admin, bloqueamos el menú
+                            habilitado = !esAdmin
                         )
                         if (esAdmin) {
                             Text(
@@ -296,7 +295,7 @@ fun SelectorDesplegableEdicion(
             value = seleccionActual,
             onValueChange = {},
             readOnly = true,
-            enabled = habilitado, // Deshabilita el campo visualmente
+            enabled = habilitado,
             label = { Text(etiqueta) },
             trailingIcon = { if (habilitado) ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandido) },
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),

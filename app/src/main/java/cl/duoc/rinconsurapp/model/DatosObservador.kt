@@ -38,7 +38,6 @@ data class RegistroObservacionUiState(
     val registroExitoso: Boolean = false
 )
 
-// Representa una fila de la tabla "registros_observacion" en SQLite
 data class RegistroObservacion(
     val id: Long = 0,
     val clasificacion: String,

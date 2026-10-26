@@ -88,7 +88,6 @@ fun GraficoTortaDashboard(
                 }
             }
 
-            // Leyenda del gráfico de torta
             val categorias = listOf(
                 Triple(
                     stringResource(R.string.dashboard_visitas),
