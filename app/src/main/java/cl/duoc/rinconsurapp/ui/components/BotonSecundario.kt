@@ -11,11 +11,6 @@ import cl.duoc.rinconsurapp.ui.styles.EstilosBoton
 import cl.duoc.rinconsurapp.ui.styles.estiloAltoBoton
 import cl.duoc.rinconsurapp.ui.theme.RinconSurAppTheme
 
-// =====================================================================
-//  BotonSecundario.kt  —  Acción de menor importancia (Limpiar, Cancelar).
-//  Parte de OutlinedButton (solo borde) y aplica NUESTROS estilos.
-// =====================================================================
-
 @Composable
 fun BotonSecundario(
     texto: String,
@@ -27,7 +22,7 @@ fun BotonSecundario(
         modifier = modifier.estiloAltoBoton(),
         shape = EstilosBoton.forma,
         colors = EstilosBoton.coloresSecundario(),
-        border = EstilosBoton.bordeSecundario(),       // border: 2px solid
+        border = EstilosBoton.bordeSecundario(),
         contentPadding = EstilosBoton.relleno
     ) {
         Text(text = texto)

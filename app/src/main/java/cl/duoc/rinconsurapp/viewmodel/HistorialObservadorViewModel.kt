@@ -47,7 +47,6 @@ class HistorialObservadorViewModel(application: Application) :
             return false
         }
 
-        // Solo puede eliminar registros que le pertenecen.
         val esPropio = db.listarRegistrosPorUsuario(usuario.id)
             .any { it.id == idRegistro }
 

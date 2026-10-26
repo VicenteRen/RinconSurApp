@@ -22,15 +22,6 @@ import cl.duoc.rinconsurapp.ui.styles.EstilosCampo
 import cl.duoc.rinconsurapp.ui.theme.Dimens
 import cl.duoc.rinconsurapp.ui.theme.RinconSurAppTheme
 
-// =====================================================================
-//  CampoContrasena.kt  —  Campo con puntos (••••) y botón "ojo".
-//  ---------------------------------------------------------------------
-//  visualTransformation cambia CÓMO se muestra el texto, no lo que vale:
-//   - PasswordVisualTransformation() -> ••••••
-//   - VisualTransformation.None      -> texto normal
-//  Si la contraseña se ve o no es ESTADO: lo decide el ViewModel.
-// =====================================================================
-
 @Composable
 fun CampoContrasena(
     valor: String,
@@ -53,7 +44,7 @@ fun CampoContrasena(
                 modifier = Modifier.size(Dimens.tamanoIcono)
             )
         },
-        trailingIcon = {                                   // ícono a la DERECHA, presionable
+        trailingIcon = {
             IconButton(onClick = onAlternarVisible) {
                 Icon(
                     painter = painterResource(

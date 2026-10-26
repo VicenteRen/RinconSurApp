@@ -52,7 +52,7 @@ fun DashboardAdminContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.dashboard_nombre_app)) }, // o el título que ella puso en Historial
+                title = { Text(stringResource(R.string.dashboard_nombre_app)) },
                 navigationIcon = {
                     IconButton(onClick = onAbrirMenu) {
                         Icon(

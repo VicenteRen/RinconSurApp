@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.update
 
 class InicioSesionViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Conexión a SQLite y SharedPreferences
     private val db = RinconSurDbHelper(application)
     private val sesion = SesionPreferencias(application)
 
@@ -62,11 +61,9 @@ class InicioSesionViewModel(application: Application) : AndroidViewModel(applica
 
     fun iniciarSesion() {
         val estado = _uiState.value
-        // Consulta real a SQLite con INNER JOIN a la tabla roles
         val usuarioEncontrado = db.autenticar(estado.rut.trim(), estado.contrasena)
 
         if (usuarioEncontrado != null) {
-            // Guardamos en SharedPreferences quién inició sesión
             sesion.guardar(usuarioEncontrado.id)
             _uiState.update { it.copy(autenticado = true, errorGeneral = null) }
         } else {
@@ -95,7 +92,7 @@ class InicioSesionViewModel(application: Application) : AndroidViewModel(applica
         }
 
         val resto = suma % 11
-        val dvCalculado = (11 - resto).toString() // <-- CORRECCIÓN APLICADA AQUÍ
+        val dvCalculado = (11 - resto).toString()
 
         val dvEsperado = when (dvCalculado) {
             "11" -> "0"

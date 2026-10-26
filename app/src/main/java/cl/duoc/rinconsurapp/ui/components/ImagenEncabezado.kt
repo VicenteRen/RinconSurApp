@@ -20,12 +20,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import cl.duoc.rinconsurapp.ui.theme.Primario // Usamos el morado
+import cl.duoc.rinconsurapp.ui.theme.Primario
 import cl.duoc.rinconsurapp.ui.theme.SombraImagen
 
 @Composable
 fun ImagenEncabezado(
-    @DrawableRes recursoImagen: Int? = null, // Ahora es opcional
+    @DrawableRes recursoImagen: Int? = null,
     descripcion: String,
     titulo: String,
     subtitulo: String,

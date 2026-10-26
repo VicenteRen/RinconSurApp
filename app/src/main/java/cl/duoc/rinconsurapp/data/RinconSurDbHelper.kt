@@ -20,12 +20,10 @@ class RinconSurDbHelper(context: Context) :
             return bytes.joinToString("") { "%02x".format(it) }
         }
 
-        // 1. Tabla ROLES
         private const val TABLA_ROLES = "roles"
         private const val ROL_ID = "id_rol"
         private const val ROL_NOMBRE = "nombre_rol"
 
-        // 2. Tabla USUARIOS
         private const val TABLA_USUARIOS = "usuarios"
         private const val USU_ID = "id_usuario"
         private const val USU_RUT = "rut"
@@ -41,18 +39,16 @@ class RinconSurDbHelper(context: Context) :
 
         private const val USU_ACTIVO = "activo"
 
-        // 3. Tabla REGISTROS DE OBSERVACIÓN
         private const val TABLA_REGISTROS = "registros_observacion"
         private const val REG_ID = "id_registro"
         private const val REG_CLASIFICACION = "clasificacion"
         private const val REG_RANGO = "rango_etario"
         private const val REG_COMPANIA = "compania"
-        private const val REG_COMPRAS = "compras_otra_tienda" // 1 = Sí, 0 = No
+        private const val REG_COMPRAS = "compras_otra_tienda"
         private const val REG_DESTINO = "acceso_destino"
         private const val REG_FECHA_HORA = "fecha_hora"
         private const val REG_USUARIO = "id_usuario"
 
-        // SQL Creación de Tablas
         private const val SQL_CREAR_ROLES =
             "CREATE TABLE $TABLA_ROLES (" +
                     "$ROL_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -92,7 +88,7 @@ class RinconSurDbHelper(context: Context) :
                     "(1, '214297353', '${encriptar("observador123")}', 'Vicente Ponce', 'v.ponce@rinconsur.cl', '987654321', '¿Cuál es el nombre de tu primera mascota?', 'princesa', 1, 1), " +
                     "(2, '228405566', '${encriptar("admin123")}', 'Jefe Administrador', 'admin@rinconsur.cl', '911223344', '¿En qué ciudad se conocieron tus padres?', 'santiago', 1, 2)"
 
-        // Consultas base con INNER JOIN
+
         private const val SQL_SELECT_USUARIOS =
             "SELECT u.*, r.$ROL_NOMBRE AS $ROL_NOMBRE " +
                     "FROM $TABLA_USUARIOS u " +
@@ -124,7 +120,6 @@ class RinconSurDbHelper(context: Context) :
         onCreate(db)
     }
 
-    // ---------------------------- USUARIOS (Login, Perfil y Recuperación) ----------------------------
 
     fun autenticar(rut: String, contrasena: String): Usuario? =
         consultarUsuarios(
@@ -173,9 +168,6 @@ class RinconSurDbHelper(context: Context) :
         return writableDatabase.update(TABLA_USUARIOS, valores, "$USU_ID = ?", arrayOf(id.toString()))
     }
 
-    // ---------------------------- GESTIÓN DE USUARIOS ----------------------------
-
-    // 2. Si el RUT no existe lo inserta; si estaba inactivo (0) lo reactiva y actualiza
     fun insertarUsuario(
         rut: String,
         contrasena: String,
@@ -188,7 +180,6 @@ class RinconSurDbHelper(context: Context) :
     ): Long {
         val rutLimpio = rut.trim()
 
-        // Buscamos si el RUT ya existe en la tabla (activo o inactivo)
         val usuarioExistente = consultarUsuarios(
             "$SQL_SELECT_USUARIOS WHERE u.$USU_RUT = ?",
             arrayOf(rutLimpio)
@@ -223,7 +214,6 @@ class RinconSurDbHelper(context: Context) :
         }
     }
 
-    // ---------------------------- VER USUARIOS --------------------------------
     fun listarUsuariosActivos(): List<Usuario> =
         consultarUsuarios("$SQL_SELECT_USUARIOS WHERE u.$USU_ACTIVO = 1 ORDER BY u.$USU_NOMBRE ASC", null)
 
@@ -243,9 +233,6 @@ class RinconSurDbHelper(context: Context) :
         return writableDatabase.update(TABLA_USUARIOS, valores, "$USU_ID = ?", arrayOf(id.toString()))
     }
 
-    // ---------------------------- REGISTROS DE OBSERVACIÓN ----------------------------
-
-    // CREATE -> INSERT (Para tu botón Guardar)
     fun insertarRegistro(registro: RegistroObservacion): Long {
         val valores = ContentValues().apply {
             put(REG_CLASIFICACION, registro.clasificacion)
@@ -259,22 +246,18 @@ class RinconSurDbHelper(context: Context) :
         return writableDatabase.insert(TABLA_REGISTROS, null, valores)
     }
 
-    // READ Global -> Para el perfil Administrador (ve los conteos de todos)
     fun listarTodosLosRegistros(): List<RegistroObservacion> =
         consultarRegistros("$SQL_SELECT_REGISTROS ORDER BY reg.$REG_ID DESC", null)
 
-    // READ por Empleado -> Para el perfil Observador (ve solo los suyos)
     fun listarRegistrosPorUsuario(idUsuario: Long): List<RegistroObservacion> =
         consultarRegistros(
             "$SQL_SELECT_REGISTROS WHERE reg.$REG_USUARIO = ? ORDER BY reg.$REG_ID DESC",
             arrayOf(idUsuario.toString())
         )
 
-    // DELETE -> Por si el observador o admin anula/elimina un registro equivocado
     fun eliminarRegistro(idRegistro: Long): Int =
         writableDatabase.delete(TABLA_REGISTROS, "$REG_ID = ?", arrayOf(idRegistro.toString()))
 
-    // ---------------------------- AYUDANTES PRIVADOS ----------------------------
 
     private fun consultarUsuarios(sql: String, args: Array<String>?): List<Usuario> {
         val lista = mutableListOf<Usuario>()

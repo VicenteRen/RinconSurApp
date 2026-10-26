@@ -110,7 +110,6 @@ fun RegistroObservacionContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 01. Punto de Acceso en una Row con insignias de colores
             TarjetaSeccion(titulo = stringResource(R.string.seccion_acceso)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -119,16 +118,15 @@ fun RegistroObservacionContent(
                     Acceso.entries.forEach { acceso ->
                         val seleccionado = (acceso == uiState.accesoDestino)
 
-                        // Color distintivo para cada acceso
+
                         val colorAcceso = when (acceso) {
-                            Acceso.A1 -> Color(0xFF5E35B1) // Morado
-                            Acceso.A2 -> Color(0xFF00897B) // Turquesa
-                            Acceso.A3 -> Color(0xFFFB8C00) // Naranja
-                            Acceso.A4 -> Color(0xFFE53935) // Rojo
+                            Acceso.A1 -> Color(0xFF5E35B1)
+                            Acceso.A2 -> Color(0xFF00897B)
+                            Acceso.A3 -> Color(0xFFFB8C00)
+                            Acceso.A4 -> Color(0xFFE53935)
                         }
 
-                        val codigo = acceso.name // "A1", "A2", "A3", "A4"
-                        //val nombreCorto = acceso.etiqueta.substringAfter("- ").replace("Acceso ", "")
+                        val codigo = acceso.name
                         val nombreCorto = when (val texto = acceso.etiqueta.substringAfter("- ").replace("Acceso ", "")) {
                             "Estacionamiento" -> "Parking"
                             else -> texto
@@ -151,7 +149,6 @@ fun RegistroObservacionContent(
                                     .padding(vertical = 10.dp, horizontal = 4.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                // Círculo de color con "A1", "A2", etc.
                                 Surface(
                                     shape = CircleShape,
                                     color = if (seleccionado) colorAcceso else colorAcceso.copy(alpha = 0.2f),
@@ -178,7 +175,6 @@ fun RegistroObservacionContent(
                 }
             }
 
-            // 02. Clasificación
             TarjetaSeccion(titulo = stringResource(R.string.seccion_clasificacion)) {
                 GrupoRadio(
                     opciones = Clasificacion.entries,
@@ -188,7 +184,6 @@ fun RegistroObservacionContent(
                 )
             }
 
-            // 03. Variables Adicionales (¿Trae compras?)
             TarjetaSeccion(titulo = stringResource(R.string.seccion_variables)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -205,7 +200,6 @@ fun RegistroObservacionContent(
                 }
             }
 
-            // 04. Compañía con iconos visuales
             TarjetaSeccion(titulo = stringResource(R.string.seccion_compania)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -280,7 +274,6 @@ fun RegistroObservacionContent(
                 }
             }
 
-            // 05. Rango Etario
             TarjetaSeccion(titulo = stringResource(R.string.seccion_rango_etario)) {
                 GrupoRadio(
                     opciones = RangoEtario.entries,
@@ -290,7 +283,6 @@ fun RegistroObservacionContent(
                 )
             }
 
-            // Botones Limpiar y Guardar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -310,7 +302,6 @@ fun RegistroObservacionContent(
     }
 }
 
-// ----------------------------- PREVIEWS -----------------------------
 
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
