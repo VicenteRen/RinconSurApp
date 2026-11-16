@@ -21,21 +21,27 @@ enum class Compania(val etiqueta: String) {
     GRUPO("Grupo (3 o más)")
 }
 
-enum class Acceso(val etiqueta: String) {
-    A1("A1 - Acceso Principal"),
-    A2("A2 - Acceso Lateral"),
-    A3("A3 - Acceso Estacionamiento"),
-    A4("A4 - Acceso Conexión")
+data class Acceso(
+    val id: Long = 0,
+    val codigo: String,
+    val nombre: String,
+    val activo: Boolean = true
+) {
+    val etiqueta: String
+        get() = "$codigo - $nombre"
 }
 
 data class RegistroObservacionUiState(
     val nombreObservador: String = "Observador",
-    val accesoDestino: Acceso = Acceso.A1,
+    val listaAccesos: List<Acceso> = emptyList(),
+    val accesoDestino: Acceso? = null,
     val clasificacion: Clasificacion = Clasificacion.TRANSITO,
     val rangoEtario: RangoEtario = RangoEtario.RANGO_26_40,
     val compania: Compania = Compania.SOLO,
     val tieneComprasExternas: Boolean = false,
-    val registroExitoso: Boolean = false
+    val registroExitoso: Boolean = false,
+    val mostrarBienvenida: Boolean = false,
+    val cargando: Boolean = false
 )
 
 data class RegistroObservacion(
@@ -45,7 +51,7 @@ data class RegistroObservacion(
     val compania: String,
     val tieneComprasExternas: Boolean,
     val accesoDestino: String?,
-    val fechaHora: String,
+    val fechaHora: String = "",
     val usuarioId: Long,
     val nombreObservador: String = ""
 )

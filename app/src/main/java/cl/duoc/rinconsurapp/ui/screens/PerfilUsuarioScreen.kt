@@ -63,7 +63,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun PerfilUsuarioScreen(
     viewModel: PerfilUsuarioViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    onVolver: () -> Unit = {},
+    onAbrirMenu: () -> Unit = {},
     onCerrarSesion: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -154,7 +154,7 @@ fun PerfilUsuarioScreen(
             viewModel.cerrarSesion()
             onCerrarSesion()
         },
-        onVolver = onVolver
+        onAbrirMenu = onAbrirMenu
     )
 }
 
@@ -170,7 +170,7 @@ fun PerfilUsuarioContent(
     alCambiarCorreo: (String) -> Unit,
     alGuardar: () -> Unit,
     alCerrarSesion: () -> Unit,
-    onVolver: () -> Unit
+    onAbrirMenu: () -> Unit
 ) {
     var mostrarDialogoCerrar by remember { mutableStateOf(false) }
 
@@ -179,10 +179,10 @@ fun PerfilUsuarioContent(
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.titulo_mi_perfil), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onVolver) {
+                    IconButton(onClick = onAbrirMenu) {
                         Icon(
-                            painter = painterResource(R.drawable.ic_volver),
-                            contentDescription = stringResource(R.string.cd_volver)
+                            painter = painterResource(R.drawable.ic_menu),
+                            contentDescription = stringResource(R.string.dashboard_abrir_menu)
                         )
                     }
                 },
@@ -352,7 +352,7 @@ fun PerfilUsuarioPreview() {
             alCambiarCorreo = {},
             alGuardar = {},
             alCerrarSesion = {},
-            onVolver = {}
+            onAbrirMenu = {}
         )
     }
 }

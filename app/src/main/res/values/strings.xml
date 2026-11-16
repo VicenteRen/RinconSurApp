@@ -151,4 +151,7 @@
     <string name="msg_usuario_eliminado">Usuario eliminado con éxito.</string>
     <string name="lista_vacia_usuarios">No hay usuarios activos registrados en el sistema.</string>
 
+    <!-- Gestión de Accesos (Admin) -->
+    <string name="menu_gestion_accesos">Gestionar Accesos</string>
+
 </resources>
