@@ -7,12 +7,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -21,14 +23,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.rinconsurapp.R
+import cl.duoc.rinconsurapp.data.Vibracion
 import cl.duoc.rinconsurapp.model.*
 import cl.duoc.rinconsurapp.ui.components.*
 import cl.duoc.rinconsurapp.ui.theme.Primario
 import cl.duoc.rinconsurapp.ui.theme.RinconSurAppTheme
 import cl.duoc.rinconsurapp.viewmodel.RegistroObservacionViewModel
 import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalContext
-import cl.duoc.rinconsurapp.data.Vibracion
 
 @Composable
 fun RegistroObservacionScreen(
@@ -42,6 +43,17 @@ fun RegistroObservacionScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val mensajeExito = stringResource(R.string.msg_registro_exitoso)
 
+    fun mostrarMensaje(texto: String) {
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(texto)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.cargarAccesos(::mostrarMensaje)
+    }
+
     RegistroObservacionContent(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
@@ -53,15 +65,13 @@ fun RegistroObservacionScreen(
         onRangoEtarioSeleccionado = viewModel::onRangoEtarioSeleccionado,
         onLimpiar = viewModel::onLimpiar,
         onRegistrar = {
-            val guardado = viewModel.onRegistrar()
-
-            if (guardado) {
-                Vibracion.vibrar(context)
-
-                scope.launch {
-                    snackbarHostState.showSnackbar(mensajeExito)
-                }
-            }
+            viewModel.onRegistrar(
+                onExito = {
+                    Vibracion.vibrar(context)
+                    mostrarMensaje(mensajeExito)
+                },
+                onError = ::mostrarMensaje
+            )
         }
     )
 }
@@ -102,213 +112,236 @@ fun RegistroObservacionContent(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            TarjetaSeccion(titulo = stringResource(R.string.seccion_acceso)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Acceso.entries.forEach { acceso ->
-                        val seleccionado = (acceso == uiState.accesoDestino)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                TarjetaSeccion(titulo = stringResource(R.string.seccion_acceso)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        uiState.listaAccesos.forEach { acceso ->
+                            val seleccionado = (acceso.codigo == uiState.accesoDestino?.codigo)
 
+                            val colorAcceso = when (acceso.codigo) {
+                                "A1" -> Color(0xFF5E35B1)
+                                "A2" -> Color(0xFF00897B)
+                                "A3" -> Color(0xFFFB8C00)
+                                "A4" -> Color(0xFFE53935)
+                                else -> Primario
+                            }
 
-                        val colorAcceso = when (acceso) {
-                            Acceso.A1 -> Color(0xFF5E35B1)
-                            Acceso.A2 -> Color(0xFF00897B)
-                            Acceso.A3 -> Color(0xFFFB8C00)
-                            Acceso.A4 -> Color(0xFFE53935)
-                        }
+                            val codigo = acceso.codigo
+                            val nombreCorto = when (val texto = acceso.nombre.replace("Acceso ", "")) {
+                                "Estacionamiento" -> "Parking"
+                                else -> texto
+                            }
 
-                        val codigo = acceso.name
-                        val nombreCorto = when (val texto = acceso.etiqueta.substringAfter("- ").replace("Acceso ", "")) {
-                            "Estacionamiento" -> "Parking"
-                            else -> texto
-                        }
-
-                        OutlinedCard(
-                            onClick = { onAccesoDestinoSeleccionado(acceso) },
-                            modifier = Modifier.weight(1f),
-                            colors = CardDefaults.outlinedCardColors(
-                                containerColor = if (seleccionado) colorAcceso.copy(alpha = 0.15f) else Color.Transparent
-                            ),
-                            border = BorderStroke(
-                                width = if (seleccionado) 2.dp else 1.dp,
-                                color = if (seleccionado) colorAcceso else MaterialTheme.colorScheme.outlineVariant
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 10.dp, horizontal = 4.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = if (seleccionado) colorAcceso else colorAcceso.copy(alpha = 0.2f),
-                                    modifier = Modifier.size(40.dp)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Text(
-                                            text = codigo,
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (seleccionado) Color.White else colorAcceso
-                                        )
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = nombreCorto,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    maxLines = 1
+                            OutlinedCard(
+                                onClick = { onAccesoDestinoSeleccionado(acceso) },
+                                modifier = Modifier.weight(1f),
+                                colors = CardDefaults.outlinedCardColors(
+                                    containerColor = if (seleccionado) colorAcceso.copy(alpha = 0.15f) else Color.Transparent
+                                ),
+                                border = BorderStroke(
+                                    width = if (seleccionado) 2.dp else 1.dp,
+                                    color = if (seleccionado) colorAcceso else MaterialTheme.colorScheme.outlineVariant
                                 )
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 10.dp, horizontal = 4.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = if (seleccionado) colorAcceso else colorAcceso.copy(alpha = 0.2f),
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Text(
+                                                text = codigo,
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (seleccionado) Color.White else colorAcceso
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = nombreCorto,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        maxLines = 1
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            TarjetaSeccion(titulo = stringResource(R.string.seccion_clasificacion)) {
-                GrupoRadio(
-                    opciones = Clasificacion.entries,
-                    seleccionada = uiState.clasificacion,
-                    onSeleccionar = onClasificacionSeleccionada,
-                    textoDe = { it.etiqueta }
-                )
-            }
-
-            TarjetaSeccion(titulo = stringResource(R.string.seccion_variables)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = stringResource(R.string.pregunta_compras),
-                        modifier = Modifier.weight(1f)
-                    )
-                    Switch(
-                        checked = uiState.tieneComprasExternas,
-                        onCheckedChange = onTieneComprasCambia
+                TarjetaSeccion(titulo = stringResource(R.string.seccion_clasificacion)) {
+                    GrupoRadio(
+                        opciones = Clasificacion.entries,
+                        seleccionada = uiState.clasificacion,
+                        onSeleccionar = onClasificacionSeleccionada,
+                        textoDe = { it.etiqueta }
                     )
                 }
-            }
 
-            TarjetaSeccion(titulo = stringResource(R.string.seccion_compania)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Compania.entries.forEach { compania ->
-                        val seleccionado = (compania == uiState.compania)
+                TarjetaSeccion(titulo = stringResource(R.string.seccion_variables)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = stringResource(R.string.pregunta_compras),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Switch(
+                            checked = uiState.tieneComprasExternas,
+                            onCheckedChange = onTieneComprasCambia
+                        )
+                    }
+                }
 
-                        val iconoRes = when (compania) {
-                            Compania.SOLO -> R.drawable.ic_solo
-                            Compania.PAREJA -> R.drawable.ic_pareja
-                            Compania.CON_NINOS -> R.drawable.ic_ninos
-                            Compania.GRUPO -> R.drawable.ic_grupo
-                        }
+                TarjetaSeccion(titulo = stringResource(R.string.seccion_compania)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Compania.entries.forEach { compania ->
+                            val seleccionado = (compania == uiState.compania)
 
-                        val etiquetaCorta = when (compania) {
-                            Compania.SOLO -> "Solo"
-                            Compania.PAREJA -> "Pareja"
-                            Compania.CON_NINOS -> "Niños"
-                            Compania.GRUPO -> "Grupo"
-                        }
+                            val iconoRes = when (compania) {
+                                Compania.SOLO -> R.drawable.ic_solo
+                                Compania.PAREJA -> R.drawable.ic_pareja
+                                Compania.CON_NINOS -> R.drawable.ic_ninos
+                                Compania.GRUPO -> R.drawable.ic_grupo
+                            }
 
-                        OutlinedCard(
-                            onClick = { onCompaniaSeleccionada(compania) },
-                            modifier = Modifier.weight(1f),
-                            colors = CardDefaults.outlinedCardColors(
-                                containerColor = if (seleccionado) {
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                                } else {
-                                    Color.Transparent
-                                }
-                            ),
-                            border = BorderStroke(
-                                width = if (seleccionado) 2.dp else 1.dp,
-                                color = if (seleccionado) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.outlineVariant
-                                }
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 12.dp, horizontal = 4.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(
-                                    painter = painterResource(iconoRes),
-                                    contentDescription = compania.etiqueta,
-                                    tint = if (seleccionado) {
-                                        MaterialTheme.colorScheme.primary
+                            val etiquetaCorta = when (compania) {
+                                Compania.SOLO -> "Solo"
+                                Compania.PAREJA -> "Pareja"
+                                Compania.CON_NINOS -> "Niños"
+                                Compania.GRUPO -> "Grupo"
+                            }
+
+                            OutlinedCard(
+                                onClick = { onCompaniaSeleccionada(compania) },
+                                modifier = Modifier.weight(1f),
+                                colors = CardDefaults.outlinedCardColors(
+                                    containerColor = if (seleccionado) {
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                                     } else {
-                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                    },
-                                    modifier = Modifier.size(28.dp)
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = etiquetaCorta,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (seleccionado) FontWeight.Bold else FontWeight.Normal,
+                                        Color.Transparent
+                                    }
+                                ),
+                                border = BorderStroke(
+                                    width = if (seleccionado) 2.dp else 1.dp,
                                     color = if (seleccionado) {
                                         MaterialTheme.colorScheme.primary
                                     } else {
-                                        MaterialTheme.colorScheme.onSurface
+                                        MaterialTheme.colorScheme.outlineVariant
                                     }
                                 )
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 12.dp, horizontal = 4.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        painter = painterResource(iconoRes),
+                                        contentDescription = compania.etiqueta,
+                                        tint = if (seleccionado) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        },
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = etiquetaCorta,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = if (seleccionado) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (seleccionado) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
                 }
+
+                TarjetaSeccion(titulo = stringResource(R.string.seccion_rango_etario)) {
+                    GrupoRadio(
+                        opciones = RangoEtario.entries,
+                        seleccionada = uiState.rangoEtario,
+                        onSeleccionar = onRangoEtarioSeleccionado,
+                        textoDe = { it.etiqueta }
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    BotonSecundario(
+                        texto = stringResource(R.string.btn_limpiar),
+                        onClick = onLimpiar,
+                        modifier = Modifier.weight(1f)
+                    )
+                    BotonPrincipal(
+                        texto = stringResource(R.string.btn_guardar),
+                        onClick = onRegistrar,
+                        habilitado = !uiState.cargando && uiState.accesoDestino != null,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
 
-            TarjetaSeccion(titulo = stringResource(R.string.seccion_rango_etario)) {
-                GrupoRadio(
-                    opciones = RangoEtario.entries,
-                    seleccionada = uiState.rangoEtario,
-                    onSeleccionar = onRangoEtarioSeleccionado,
-                    textoDe = { it.etiqueta }
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                BotonSecundario(
-                    texto = stringResource(R.string.btn_limpiar),
-                    onClick = onLimpiar,
-                    modifier = Modifier.weight(1f)
-                )
-                BotonPrincipal(
-                    texto = stringResource(R.string.btn_guardar),
-                    onClick = onRegistrar,
-                    modifier = Modifier.weight(1f)
+            if (uiState.cargando) {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
                 )
             }
         }
     }
 }
 
-
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 private fun RegistroObservacionPreview() {
+    val accesosDemo = listOf(
+        Acceso(1, "A1", "Acceso Norte"),
+        Acceso(2, "A2", "Acceso Sur"),
+        Acceso(3, "A3", "Estacionamiento"),
+        Acceso(4, "A4", "Acceso Poniente")
+    )
     RinconSurAppTheme {
         RegistroObservacionContent(
-            uiState = RegistroObservacionUiState(nombreObservador = "Vicente Ponce"),
+            uiState = RegistroObservacionUiState(
+                nombreObservador = "Vicente Ponce",
+                listaAccesos = accesosDemo,
+                accesoDestino = accesosDemo.first()
+            ),
             onAccesoDestinoSeleccionado = {},
             onClasificacionSeleccionada = {},
             onTieneComprasCambia = {},

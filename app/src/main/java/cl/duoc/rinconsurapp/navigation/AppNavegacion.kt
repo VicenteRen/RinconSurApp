@@ -34,6 +34,7 @@ import cl.duoc.rinconsurapp.model.Rol
 import cl.duoc.rinconsurapp.ui.screens.CrearUsuarioScreen
 import cl.duoc.rinconsurapp.ui.screens.DashboardAdminScreen
 import cl.duoc.rinconsurapp.ui.screens.DashboardObservadorScreen
+import cl.duoc.rinconsurapp.ui.screens.GestionAccesosScreen
 import cl.duoc.rinconsurapp.ui.screens.GestionUsuariosScreen
 import cl.duoc.rinconsurapp.ui.screens.HistorialAdminScreen
 import cl.duoc.rinconsurapp.ui.screens.HistorialObservadorScreen
@@ -208,6 +209,22 @@ fun AppNavegacion() {
                         }
                     )
                     NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.menu_gestion_accesos)) },
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_accesos),
+                                contentDescription = null
+                            )
+                        },
+                        selected = rutaActual == Ruta.GestionAccesos.ruta,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate(Ruta.GestionAccesos.ruta) {
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                    NavigationDrawerItem(
                         label = { Text(stringResource(R.string.menu_crear_usuario)) },
                         icon = {
                             Icon(
@@ -317,9 +334,12 @@ fun AppNavegacion() {
             composable(Ruta.HistorialAdmin.ruta) {
                 HistorialAdminScreen(onAbrirMenu = abrirMenu)
             }
+            composable(Ruta.GestionAccesos.ruta) {
+                GestionAccesosScreen(onAbrirMenu = abrirMenu)
+            }
             composable(Ruta.Perfil.ruta) {
                 PerfilUsuarioScreen(
-                    onVolver = { navController.navigateUp() },
+                    onAbrirMenu = abrirMenu,
                     onCerrarSesion = ejecutarCierreSesion
                 )
             }

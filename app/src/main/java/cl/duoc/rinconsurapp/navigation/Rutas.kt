@@ -11,4 +11,5 @@ sealed class Ruta(val ruta: String) {
     data object HistorialAdmin : Ruta("historial_admin")
     data object CrearUsuario : Ruta("crear_usuario")
     data object GestionUsuarios : Ruta("gestion_usuarios")
+    data object GestionAccesos : Ruta("gestion_accesos")
 }
