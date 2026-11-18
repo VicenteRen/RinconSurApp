@@ -54,7 +54,7 @@
     <string name="etiqueta_seleccione_pregunta">Seleccione su pregunta de seguridad</string>
     <string name="etiqueta_respuesta">Respuesta</string>
     <string name="titulo_crear_segura">Crea una contraseña segura</string>
-    <string name="btn_ir_login">Ir al Login</string>
+    <string name="btn_ir_login">Ir al Inicio de Sesion</string>
 
     <!-- Opciones del Selector de Preguntas de Restablecer Contraseña -->
     <string name="preg_mascota">¿Cuál es el nombre de tu primera mascota?</string>

@@ -37,7 +37,7 @@ class GestionAccesosViewModel : ViewModel() {
     }
 
     fun onCodigoCambia(valor: String) {
-        val limpio = valor. uppercase().filter { !it.isWhitespace() }.take(2)
+        val limpio = valor.uppercase().filter { !it.isWhitespace() }.take(2)
         _uiState.update { it.copy(codigo = limpio, errorCodigo = null) }
     }
 
@@ -45,12 +45,12 @@ class GestionAccesosViewModel : ViewModel() {
         _uiState.update { it.copy(nombre = valor, errorNombre = null) }
     }
 
-    fun crearAcceso(onExito: (Acceso) -> Unit, onError: (String) -> Unit) {
+    fun validar(): Boolean {
         val estado = _uiState.value
         val codigoLimpio = estado.codigo.trim().uppercase()
         val nombreLimpio = estado.nombre.trim()
 
-        val formatoCodigoValido = Regex("^[A-Z][0-9]$")
+        val formatoCodigoValido = Regex("^[A-Z]{1}[0-9]{1}$")
 
         val errorCodigo = when {
             codigoLimpio.isBlank() -> "El código es obligatorio (ej: A5)"
@@ -61,7 +61,14 @@ class GestionAccesosViewModel : ViewModel() {
 
         _uiState.update { it.copy(errorCodigo = errorCodigo, errorNombre = errorNombre) }
 
-        if (errorCodigo != null || errorNombre != null) return
+        return errorCodigo == null && errorNombre == null
+    }
+
+    fun crearAcceso(onExito: (Acceso) -> Unit, onError: (String) -> Unit) {
+        if (!validar()) return
+
+        val codigoLimpio = _uiState.value.codigo.trim().uppercase()
+        val nombreLimpio = _uiState.value.nombre.trim()
 
         ejecutar(onError) {
             val nuevo = repositorio.crearAcceso(codigoLimpio, nombreLimpio)
