@@ -5,26 +5,21 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
 
+    // private const val URL_GATEWAY = "http://10.0.2.2:8080/"
+    private const val URL_GATEWAY = "http://127.0.0.1:8080/"
 
-//    private const val URL_OBSERVACIONES = "http://10.0.2.2:8081/"
-//    private const val URL_USUARIOS = "http://10.0.2.2:8082/"
-//    private const val URL_ACCESOS = "http://10.0.2.2:8083/"
-
-    private const val URL_OBSERVACIONES = "http://127.0.0.1:8081/"
-    private const val URL_USUARIOS = "http://127.0.0.1:8082/"
-    private const val URL_ACCESOS = "http://127.0.0.1:8083/"
-
-    private fun crear(urlBase: String): Retrofit =
+    private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl(urlBase)
+            .baseUrl(URL_GATEWAY)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+    }
 
     val observacionApi: ObservacionApi by lazy {
-        crear(URL_OBSERVACIONES).create(ObservacionApi::class.java)
+        retrofit.create(ObservacionApi::class.java)
     }
 
     val accesoApi: AccesoApi by lazy {
-        crear(URL_ACCESOS).create(AccesoApi::class.java)
+        retrofit.create(AccesoApi::class.java)
     }
 }

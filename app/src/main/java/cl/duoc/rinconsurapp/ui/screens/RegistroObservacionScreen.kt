@@ -51,6 +51,7 @@ fun RegistroObservacionScreen(
     }
 
     LaunchedEffect(Unit) {
+        viewModel.cargarNombreObservador(context)
         viewModel.cargarAccesos(::mostrarMensaje)
     }
 
