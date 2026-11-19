@@ -66,7 +66,8 @@ class ObservacionRepository(
     private fun mensajeDelServidor(e: HttpException): String {
         val cuerpo = e.response()?.errorBody()?.string()
         val mensaje = try {
-            JSONObject(cuerpo ?: "").optString("message")
+            val json = JSONObject(cuerpo ?: "")
+            json.optString("message").ifBlank { json.optString("detail") }
         } catch (ex: Exception) {
             ""
         }

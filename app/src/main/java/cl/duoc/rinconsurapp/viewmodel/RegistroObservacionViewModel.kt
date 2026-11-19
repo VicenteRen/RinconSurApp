@@ -1,7 +1,7 @@
 package cl.duoc.rinconsurapp.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import android.content.Context
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cl.duoc.rinconsurapp.data.ObservacionRepository
 import cl.duoc.rinconsurapp.data.RinconSurDbHelper
@@ -13,18 +13,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class RegistroObservacionViewModel(application: Application) : AndroidViewModel(application) {
+class RegistroObservacionViewModel : ViewModel() {
 
     private val repositorio = ObservacionRepository()
-    private val db = RinconSurDbHelper(application)
-    private val sesion = SesionPreferencias(application)
+    private var usuarioIdActivo: Long = 1L
 
     private val _uiState = MutableStateFlow(RegistroObservacionUiState())
     val uiState: StateFlow<RegistroObservacionUiState> = _uiState.asStateFlow()
-
-    init {
-        cargarNombreObservador()
-    }
 
     private fun ejecutar(onError: (String) -> Unit = {}, accion: suspend () -> Unit) {
         viewModelScope.launch {
@@ -39,13 +34,18 @@ class RegistroObservacionViewModel(application: Application) : AndroidViewModel(
         }
     }
 
-    fun cargarNombreObservador() {
-        val idGuardado = sesion.leer()
-        val idUsuarioActivo = if (idGuardado != SesionPreferencias.SIN_SESION) idGuardado else 1L
-        val usuario = db.buscarUsuarioPorId(idUsuarioActivo)
-
-        if (usuario != null) {
-            _uiState.update { it.copy(nombreObservador = usuario.nombreCompleto) }
+    fun cargarNombreObservador(context: Context) {
+        val sesion = SesionPreferencias(context)
+        val db = RinconSurDbHelper(context)
+        try {
+            val idGuardado = sesion.leer()
+            usuarioIdActivo = if (idGuardado != SesionPreferencias.SIN_SESION) idGuardado else 1L
+            val usuario = db.buscarUsuarioPorId(usuarioIdActivo)
+            if (usuario != null) {
+                _uiState.update { it.copy(nombreObservador = usuario.nombreCompleto) }
+            }
+        } finally {
+            db.close()
         }
     }
 
@@ -83,16 +83,13 @@ class RegistroObservacionViewModel(application: Application) : AndroidViewModel(
     fun onRegistrar(onExito: () -> Unit, onError: (String) -> Unit) = ejecutar(onError) {
         val estadoActual = _uiState.value
 
-        val idGuardado = sesion.leer()
-        val idUsuarioActivo = if (idGuardado != SesionPreferencias.SIN_SESION) idGuardado else 1L
-
         val nuevoRegistro = RegistroObservacion(
             clasificacion = estadoActual.clasificacion.etiqueta,
             rangoEtario = estadoActual.rangoEtario.etiqueta,
             compania = estadoActual.compania.etiqueta,
             tieneComprasExternas = estadoActual.tieneComprasExternas,
             accesoDestino = estadoActual.accesoDestino?.etiqueta,
-            usuarioId = idUsuarioActivo,
+            usuarioId = usuarioIdActivo,
             nombreObservador = estadoActual.nombreObservador
         )
 
@@ -117,10 +114,5 @@ class RegistroObservacionViewModel(application: Application) : AndroidViewModel(
                 accesoDestino = estado.accesoDestino
             )
         }
-    }
-
-    override fun onCleared() {
-        db.close()
-        super.onCleared()
     }
 }
