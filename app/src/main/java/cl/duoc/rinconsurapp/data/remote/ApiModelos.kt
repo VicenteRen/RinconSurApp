@@ -1,7 +1,9 @@
 package cl.duoc.rinconsurapp.data.remote
 
+import android.util.Base64
 import cl.duoc.rinconsurapp.model.Acceso
 import cl.duoc.rinconsurapp.model.RegistroObservacion
+import cl.duoc.rinconsurapp.model.Usuario
 
 // =====================================================================
 //  DTOs para ms-observaciones (Puerto 8081)
@@ -62,5 +64,54 @@ fun AccesoResponse.aAcceso() = Acceso(
     id = id,
     codigo = codigo,
     nombre = nombre,
+    activo = activo
+)
+
+// =====================================================================
+//  DTOs para ms-usuarios (Puerto 8082)
+// =====================================================================
+
+data class UsuarioRequest(
+    val rut: String,
+    val contrasena: String,
+    val nombreCompleto: String,
+    val correo: String,
+    val telefono: String,
+    val preguntaSeguridad: String,
+    val respuestaSeguridad: String,
+    val rolId: Long
+)
+
+data class UsuarioResponse(
+    val id: Long,
+    val rut: String,
+    val contrasena: String,
+    val nombreCompleto: String,
+    val correo: String,
+    val telefono: String,
+    val rolId: Long,
+    val rolNombre: String,
+    val avatar: String? = null,
+    val primerIngreso: Boolean? = false,
+    val activo: Boolean
+)
+
+fun UsuarioResponse.aUsuario() = Usuario(
+    id = id,
+    rut = rut,
+    contrasena = contrasena,
+    nombreCompleto = nombreCompleto,
+    correo = correo,
+    telefono = telefono,
+    rolId = rolId,
+    rolNombre = rolNombre,
+    avatar = avatar?.let {
+        try {
+            Base64.decode(it, Base64.DEFAULT)
+        } catch (e: Exception) {
+            null
+        }
+    },
+    primerIngreso = primerIngreso ?: false,
     activo = activo
 )

@@ -2,17 +2,21 @@ package cl.duoc.rinconsurapp.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import cl.duoc.rinconsurapp.data.RinconSurDbHelper
 import cl.duoc.rinconsurapp.data.SesionPreferencias
+import cl.duoc.rinconsurapp.data.UsuarioRepository
+import cl.duoc.rinconsurapp.data.remote.RetrofitClient
 import cl.duoc.rinconsurapp.model.InicioSesionUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class InicioSesionViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val db = RinconSurDbHelper(application)
+    private val repositorio = UsuarioRepository()
     private val sesion = SesionPreferencias(application)
 
     private val _uiState = MutableStateFlow(InicioSesionUiState())
@@ -41,6 +45,7 @@ class InicioSesionViewModel(application: Application) : AndroidViewModel(applica
         val error = when {
             nuevaContrasena.isBlank() -> "Contraseña obligatoria"
             nuevaContrasena.length < 6 -> "Ingrese mínimo 6 caracteres"
+            nuevaContrasena.contains(" ") -> "No pueden haber espacios en blanco"
             else -> null
         }
 
@@ -61,17 +66,18 @@ class InicioSesionViewModel(application: Application) : AndroidViewModel(applica
 
     fun iniciarSesion() {
         val estado = _uiState.value
-        val usuarioEncontrado = db.autenticar(estado.rut.trim(), estado.contrasena)
-
-        if (usuarioEncontrado != null) {
-            sesion.guardar(usuarioEncontrado.id)
-            _uiState.update { it.copy(autenticado = true, errorGeneral = null) }
-        } else {
-            _uiState.update {
-                it.copy(
-                    autenticado = false,
-                    errorGeneral = "RUT o contraseña incorrecta. Vuelva a intentarlo."
-                )
+        viewModelScope.launch {
+            try {
+                val usuario = repositorio.login(estado.rut.trim(), estado.contrasena)
+                sesion.guardar(usuario.id)
+                _uiState.update { it.copy(autenticado = true, errorGeneral = null) }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        autenticado = false,
+                        errorGeneral = e.message ?: "RUT o contraseña incorrecta. Vuelva a intentarlo."
+                    )
+                }
             }
         }
     }
@@ -101,10 +107,5 @@ class InicioSesionViewModel(application: Application) : AndroidViewModel(applica
         }
 
         return dvIngresado == dvEsperado
-    }
-
-    override fun onCleared() {
-        db.close()
-        super.onCleared()
     }
 }

@@ -1,7 +1,10 @@
 package cl.duoc.rinconsurapp.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -13,24 +16,29 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import cl.duoc.rinconsurapp.R
-import cl.duoc.rinconsurapp.data.RinconSurDbHelper
 import cl.duoc.rinconsurapp.data.SesionPreferencias
+import cl.duoc.rinconsurapp.data.UsuarioRepository
 import cl.duoc.rinconsurapp.model.Rol
+import cl.duoc.rinconsurapp.model.Usuario
+import cl.duoc.rinconsurapp.ui.screens.ConfigurarSeguridadScreen
+import cl.duoc.rinconsurapp.ui.screens.CrearContrasenaScreen
 import cl.duoc.rinconsurapp.ui.screens.CrearUsuarioScreen
 import cl.duoc.rinconsurapp.ui.screens.DashboardAdminScreen
 import cl.duoc.rinconsurapp.ui.screens.DashboardObservadorScreen
@@ -43,21 +51,38 @@ import cl.duoc.rinconsurapp.ui.screens.PerfilUsuarioScreen
 import cl.duoc.rinconsurapp.ui.screens.RegistroObservacionScreen
 import cl.duoc.rinconsurapp.ui.screens.RestablecerContrasenaScreen
 import cl.duoc.rinconsurapp.ui.theme.Dimens
+import cl.duoc.rinconsurapp.viewmodel.PrimerIngresoViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 fun AppNavegacion() {
     val navController = rememberNavController()
     val context = LocalContext.current
-    val db = remember { RinconSurDbHelper(context) }
+    val repositorio = remember { UsuarioRepository() }
     val sesion = remember { SesionPreferencias(context) }
+    val primerIngresoViewModel: PrimerIngresoViewModel = viewModel()
 
-    DisposableEffect(Unit) {
-        onDispose { db.close() }
+    var usuarioActual by remember { mutableStateOf<Usuario?>(null) }
+    var sesionVerificada by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val idGuardado = sesion.leer()
+        if (idGuardado != SesionPreferencias.SIN_SESION) {
+            try {
+                usuarioActual = repositorio.buscarPorId(idGuardado)
+            } catch (e: Exception) {
+                sesion.borrar()
+                usuarioActual = null
+            }
+        }
+        sesionVerificada = true
     }
 
-    var usuarioActual by remember {
-        mutableStateOf(db.buscarUsuarioPorId(sesion.leer()))
+    if (!sesionVerificada) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
     }
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -67,15 +92,17 @@ fun AppNavegacion() {
     val entradaActual by navController.currentBackStackEntryAsState()
     val rutaActual = entradaActual?.destination?.route
 
-    val destinoInicial = when (usuarioActual?.rolId) {
-        Rol.ID_ADMIN -> Ruta.DashboardAdmin.ruta
-        Rol.ID_OBSERVADOR -> Ruta.RegistroObservacion.ruta
-        else -> Ruta.InicioSesion.ruta
+    val destinoInicial = when {
+        usuarioActual == null -> Ruta.InicioSesion.ruta
+        usuarioActual!!.primerIngreso -> Ruta.ConfigurarSeguridad.ruta
+        usuarioActual!!.rolId == Rol.ID_ADMIN -> Ruta.DashboardAdmin.ruta
+        else -> Ruta.RegistroObservacion.ruta
     }
 
     val ejecutarCierreSesion = {
         sesion.borrar()
         usuarioActual = null
+        primerIngresoViewModel.limpiarFormulario()
         navController.navigate(Ruta.InicioSesion.ruta) {
             popUpTo(0) { inclusive = true }
         }
@@ -106,7 +133,9 @@ fun AppNavegacion() {
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        gesturesEnabled = rutaActual != Ruta.InicioSesion.ruta,
+        gesturesEnabled = rutaActual != Ruta.InicioSesion.ruta &&
+                rutaActual != Ruta.ConfigurarSeguridad.ruta &&
+                rutaActual != Ruta.CrearContrasena.ruta,
         drawerContent = {
             ModalDrawerSheet {
                 Text(
@@ -303,20 +332,57 @@ fun AppNavegacion() {
             composable(Ruta.InicioSesion.ruta) {
                 InicioSesionScreen(
                     onLoginExitoso = {
-                        val usuarioLogueado = db.buscarUsuarioPorId(sesion.leer())
-                        usuarioActual = usuarioLogueado
-                        val rutaDestino = if (usuarioLogueado?.rolId == Rol.ID_ADMIN) {
-                            Ruta.DashboardAdmin.ruta
-                        } else {
-                            Ruta.RegistroObservacion.ruta
-                        }
-                        navController.navigate(rutaDestino) {
-                            popUpTo(Ruta.InicioSesion.ruta) { inclusive = true }
+                        scope.launch {
+                            val idUsuario = sesion.leer()
+                            if (idUsuario != SesionPreferencias.SIN_SESION) {
+                                try {
+                                    val usuarioLogueado = repositorio.buscarPorId(idUsuario)
+                                    usuarioActual = usuarioLogueado
+                                    if (usuarioLogueado.primerIngreso) {
+                                        primerIngresoViewModel.limpiarFormulario()
+                                    }
+                                    val rutaDestino = when {
+                                        usuarioLogueado.primerIngreso -> Ruta.ConfigurarSeguridad.ruta
+                                        usuarioLogueado.rolId == Rol.ID_ADMIN -> Ruta.DashboardAdmin.ruta
+                                        else -> Ruta.RegistroObservacion.ruta
+                                    }
+                                    navController.navigate(rutaDestino) {
+                                        popUpTo(Ruta.InicioSesion.ruta) { inclusive = true }
+                                    }
+                                } catch (e: Exception) {
+                                    // Error de red al cargar perfil
+                                }
+                            }
                         }
                     },
                     onOlvideContrasena = {
                         navController.navigate(Ruta.RestablecerContrasena.ruta)
                     }
+                )
+            }
+            composable(Ruta.ConfigurarSeguridad.ruta) {
+                ConfigurarSeguridadScreen(
+                    viewModel = primerIngresoViewModel,
+                    onContinuar = {
+                        navController.navigate(Ruta.CrearContrasena.ruta)
+                    }
+                )
+            }
+            composable(Ruta.CrearContrasena.ruta) {
+                CrearContrasenaScreen(
+                    viewModel = primerIngresoViewModel,
+                    onPrimerIngresoCompletado = {
+                        usuarioActual = usuarioActual?.copy(primerIngreso = false)
+                        val destinoFinal = if (usuarioActual?.rolId == Rol.ID_ADMIN) {
+                            Ruta.DashboardAdmin.ruta
+                        } else {
+                            Ruta.RegistroObservacion.ruta
+                        }
+                        navController.navigate(destinoFinal) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    onVolver = { navController.popBackStack() }
                 )
             }
             composable(Ruta.RegistroObservacion.ruta) {
@@ -350,11 +416,18 @@ fun AppNavegacion() {
             }
             composable(Ruta.CrearUsuario.ruta) {
                 CrearUsuarioScreen(
-                    onVolver = { navController.popBackStack() }
+                    onAbrirMenu = abrirMenu,
+                    onUsuarioCreado = {
+                        navController.navigate(Ruta.GestionUsuarios.ruta) {
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
             composable(Ruta.GestionUsuarios.ruta) {
-                GestionUsuariosScreen(onVolver = { navController.popBackStack() })
+                GestionUsuariosScreen(
+                    onAbrirMenu = abrirMenu
+                )
             }
         }
     }

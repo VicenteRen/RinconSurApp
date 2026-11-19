@@ -8,5 +8,6 @@ data class InicioSesionUiState(
     val contrasenaError: String? = null,
     val errorGeneral: String? = null,
     val esValido: Boolean = false,
-    val autenticado: Boolean = false
+    val autenticado: Boolean = false,
+    val sinEspaciosEnBlanco: Boolean = false
 )

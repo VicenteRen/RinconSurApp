@@ -2,35 +2,40 @@ package cl.duoc.rinconsurapp.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import cl.duoc.rinconsurapp.data.RinconSurDbHelper
+import androidx.lifecycle.viewModelScope
+import cl.duoc.rinconsurapp.data.UsuarioRepository
 import cl.duoc.rinconsurapp.model.CrearUsuarioUiState
 import cl.duoc.rinconsurapp.model.Rol
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class CrearUsuarioViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val db = RinconSurDbHelper(application)
+    companion object {
+        const val CONTRASENA_TEMPORAL = "Temp1234*"
+        private const val CARACTERES_ESPANOL = "ñÑáéíóúÁÉÍÓÚüÜ"
+    }
+
+    private val repositorio = UsuarioRepository()
     private val _uiState = MutableStateFlow(CrearUsuarioUiState())
     val uiState: StateFlow<CrearUsuarioUiState> = _uiState.asStateFlow()
 
-    fun inicializarListas(roles: List<String>, preguntas: List<String>) {
+    fun inicializarRoles(roles: List<String>) {
         if (_uiState.value.listaRoles.isEmpty()) {
             _uiState.update {
                 it.copy(
                     listaRoles = roles,
-                    listaPreguntas = preguntas,
-                    rolSeleccionado = roles.firstOrNull() ?: "",
-                    preguntaSeleccionada = preguntas.firstOrNull() ?: ""
+                    rolSeleccionado = roles.firstOrNull() ?: ""
                 )
             }
         }
     }
 
     fun onNombreCambiado(nombre: String) {
-        val nombreFiltrado = nombre.filter { it.isLetter() || it.isWhitespace() }
+        val nombreFiltrado = nombre.filter { it.isLetter() || it.isWhitespace() || it in CARACTERES_ESPANOL }
         val nombreFormateado = nombreFiltrado.split(" ").joinToString(" ") { palabra ->
             if (palabra.isNotEmpty()) palabra.lowercase().replaceFirstChar { it.uppercase() } else ""
         }
@@ -40,9 +45,12 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
 
     fun onCorreoCambiado(correo: String) {
         val correoMinuscula = correo.lowercase()
-        val error = if (correoMinuscula.isNotBlank() && !android.util.Patterns.EMAIL_ADDRESS.matcher(correoMinuscula).matches()) {
+        val patronCorreo = Regex("^[a-z0-9ñáéíóúü._%+-]+@[a-z0-9ñáéíóúü.-]+\\.[a-z]{2,6}$")
+
+        val error = if (correoMinuscula.isNotBlank() && !correoMinuscula.matches(patronCorreo)) {
             "Correo inválido"
         } else null
+
         _uiState.update { it.copy(correo = correoMinuscula, correoError = error) }
         validarFormulario()
     }
@@ -63,12 +71,6 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
         if (nuevoRut.isNotBlank()) {
             if (!validarRutModulo11(nuevoRut)) {
                 error = "RUT inválido"
-            } else {
-                val rutDuplicado = db.listarUsuariosActivos().any { it.rut == nuevoRut }
-
-                if (rutDuplicado) {
-                    error = "Este RUT ya está en uso"
-                }
             }
         }
 
@@ -81,62 +83,12 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
         validarFormulario()
     }
 
-    fun onPreguntaSeleccionada(pregunta: String) {
-        _uiState.update { it.copy(preguntaSeleccionada = pregunta) }
-        validarFormulario()
-    }
-
-    fun onRespuestaCambiada(respuesta: String) {
-        if (!respuesta.all { it.isLetter() || it.isWhitespace() }) return
-        _uiState.update { it.copy(respuestaSeguridad = respuesta) }
-        validarFormulario()
-    }
-
-    fun onContrasenaCambiada(contrasena: String) {
-        _uiState.update { estado ->
-            val contrasenasCoinciden = contrasena == estado.confirmarContrasena
-            val error = if (estado.confirmarContrasena.isNotBlank() && !contrasenasCoinciden) {
-                "Las contraseñas no coinciden"
-            } else null
-
-            estado.copy(
-                contrasena = contrasena,
-                tieneLongitudValida = contrasena.length >= 8,
-                tieneNumero = contrasena.any { c -> c.isDigit() },
-                tieneMayuscula = contrasena.any { c -> c.isUpperCase() },
-                sinCaracteresEspeciales = contrasena.isNotEmpty() && contrasena.all { it.isLetterOrDigit() },
-                contrasenaError = error
-            )
-        }
-        validarFormulario()
-    }
-
-    fun onConfirmarContrasenaCambiada(contrasena: String) {
-        _uiState.update { estado ->
-            val contrasenasCoinciden = estado.contrasena == contrasena
-            val error = if (contrasena.isNotBlank() && !contrasenasCoinciden) {
-                "Las contraseñas no coinciden"
-            } else null
-
-            estado.copy(confirmarContrasena = contrasena, contrasenaError = error)
-        }
-        validarFormulario()
-    }
-
-    fun alternarVisibilidadContrasenas() {
-        _uiState.update { it.copy(contrasenasVisibles = !it.contrasenasVisibles) }
-    }
-
     private fun validarFormulario() {
         _uiState.update { estado ->
             val esValido = estado.nombre.isNotBlank() &&
                     estado.rutError == null && estado.rut.isNotBlank() &&
                     estado.correoError == null && estado.correo.isNotBlank() &&
-                    estado.telefono.length == 9 &&
-                    estado.respuestaSeguridad.isNotBlank() &&
-                    estado.tieneLongitudValida && estado.tieneNumero &&
-                    estado.tieneMayuscula && estado.sinCaracteresEspeciales &&
-                    (estado.contrasena == estado.confirmarContrasena)
+                    estado.telefono.length == 9
 
             estado.copy(formularioValido = esValido)
         }
@@ -146,29 +98,36 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
         val estado = _uiState.value
         val rolId = if (estado.rolSeleccionado == textoRolAdmin) Rol.ID_ADMIN else Rol.ID_OBSERVADOR
 
-        try {
-            val id = db.insertarUsuario(
-                rut = estado.rut,
-                contrasena = estado.contrasena,
-                nombre = estado.nombre,
-                correo = estado.correo,
-                telefono = estado.telefono,
-                preguntaSeguridad = estado.preguntaSeleccionada,
-                respuestaSeguridad = estado.respuestaSeguridad,
-                rolId = rolId
-            )
-            if (id > -1) {
+        viewModelScope.launch {
+            try {
+                repositorio.crearUsuario(
+                    rut = estado.rut,
+                    contrasena = CONTRASENA_TEMPORAL,
+                    nombreCompleto = estado.nombre,
+                    correo = estado.correo,
+                    telefono = estado.telefono,
+                    preguntaSeguridad = "Pregunta inicial",
+                    respuestaSeguridad = "Respuesta inicial",
+                    rolId = rolId
+                )
                 _uiState.update { it.copy(creacionExitosa = true, errorGeneral = null) }
-            } else {
-                _uiState.update { it.copy(errorGeneral = "El RUT ya existe y está activo en el sistema.") }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorGeneral = e.message ?: "El RUT ya existe o error en el servidor.") }
             }
-        } catch (e: Exception) {
-            _uiState.update { it.copy(errorGeneral = "Error de base de datos.") }
         }
     }
 
     fun onDialogoExitoCerrado() {
-        _uiState.update { it.copy(creacionExitosa = false) }
+        _uiState.update {
+            it.copy(
+                creacionExitosa = false,
+                nombre = "",
+                rut = "",
+                correo = "",
+                telefono = "",
+                formularioValido = false
+            )
+        }
     }
 
     private fun validarRutModulo11(rutCompleto: String): Boolean {
@@ -189,10 +148,5 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
             else -> dvCalculado
         }
         return dvIngresado == dvEsperado
-    }
-
-    override fun onCleared() {
-        db.close()
-        super.onCleared()
     }
 }

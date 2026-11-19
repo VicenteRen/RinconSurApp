@@ -4,6 +4,7 @@ sealed class Ruta(val ruta: String) {
     data object InicioSesion : Ruta("inicio_sesion")
     data object Perfil : Ruta("perfil")
     data object RestablecerContrasena : Ruta("restablecer_contrasena")
+
     data object RegistroObservacion : Ruta("registro_observacion")
     data object DashboardObservador : Ruta("dashboard_observador")
     data object HistorialObservador : Ruta("historial_observador")
@@ -12,4 +13,8 @@ sealed class Ruta(val ruta: String) {
     data object CrearUsuario : Ruta("crear_usuario")
     data object GestionUsuarios : Ruta("gestion_usuarios")
     data object GestionAccesos : Ruta("gestion_accesos")
+
+    data object ConfigurarSeguridad : Ruta("configurar_seguridad")
+
+    data object CrearContrasena : Ruta("crear_contrasena")
 }

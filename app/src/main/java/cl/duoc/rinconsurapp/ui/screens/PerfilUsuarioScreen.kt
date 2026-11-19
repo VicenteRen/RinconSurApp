@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,6 +75,17 @@ fun PerfilUsuarioScreen(
     val textoCamaraDenegada = stringResource(R.string.permiso_camara_denegado)
     val textoGaleriaDenegada = stringResource(R.string.permiso_galeria_denegado)
     val textoAjustes = stringResource(R.string.btn_ajustes)
+    val textoExito = stringResource(R.string.msg_actualizacion_exitosa)
+
+    // Lanzador para mostrar el Snackbar flotante al actualizar con éxito
+    LaunchedEffect(uiState.informacionModificadaExitosamente) {
+        if (uiState.informacionModificadaExitosamente) {
+            snackbarHostState.showSnackbar(
+                message = textoExito,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
 
     fun avisarPermisoDenegado(mensaje: String) {
         scope.launch {

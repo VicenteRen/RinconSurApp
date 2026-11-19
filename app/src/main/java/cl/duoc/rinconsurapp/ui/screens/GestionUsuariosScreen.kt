@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -15,7 +16,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cl.duoc.rinconsurapp.R
@@ -28,9 +28,13 @@ import cl.duoc.rinconsurapp.viewmodel.GestionUsuariosViewModel
 @Composable
 fun GestionUsuariosScreen(
     viewModel: GestionUsuariosViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    onVolver: () -> Unit
+    onAbrirMenu: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.cargarUsuarios()
+    }
 
     GestionUsuariosContent(
         uiState = uiState,
@@ -44,7 +48,7 @@ fun GestionUsuariosScreen(
         onEditCorreoCambiado = { viewModel.onEditCorreoCambiado(it) },
         onEditTelefonoCambiado = { viewModel.onEditTelefonoCambiado(it) },
         onEditRolSeleccionado = { viewModel.onEditRolSeleccionado(it) },
-        onVolver = onVolver
+        onAbrirMenu = onAbrirMenu
     )
 }
 
@@ -62,18 +66,25 @@ fun GestionUsuariosContent(
     onEditCorreoCambiado: (String) -> Unit,
     onEditTelefonoCambiado: (String) -> Unit,
     onEditRolSeleccionado: (String) -> Unit,
-    onVolver: () -> Unit
+    onAbrirMenu: () -> Unit
 ) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.titulo_gestion_usuarios), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onVolver) {
-                        Icon(painter = painterResource(R.drawable.ic_volver), contentDescription = stringResource(R.string.cd_volver))
+                    IconButton(onClick = onAbrirMenu) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_menu),
+                            contentDescription = stringResource(R.string.dashboard_abrir_menu)
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Primario, titleContentColor = Color.White, navigationIconContentColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Primario,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -107,7 +118,6 @@ fun GestionUsuariosContent(
             }
         }
 
-
         if (uiState.errorGlobal != null) {
             AlertDialog(
                 onDismissRequest = onLimpiarErrorGlobal,
@@ -120,7 +130,6 @@ fun GestionUsuariosContent(
                 }
             )
         }
-
 
         if (uiState.mostrarDialogoEliminar) {
             AlertDialog(
@@ -142,13 +151,17 @@ fun GestionUsuariosContent(
 
         if (uiState.mostrarDialogoEditar && uiState.usuarioAEditar != null) {
             val esAdmin = uiState.usuarioAEditar.rolNombre == "Administrador"
+            val opcionesRoles = uiState.listaRoles.ifEmpty { listOf("Observador", "Administrador") }
 
             AlertDialog(
                 onDismissRequest = onCancelarEdicion,
                 title = { Text("Editar Usuario", fontWeight = FontWeight.Bold) },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(text = "Modificando a: ${uiState.usuarioAEditar.nombreCompleto}", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            text = "Modificando a: ${uiState.usuarioAEditar.nombreCompleto}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
 
                         OutlinedTextField(
                             value = uiState.editCorreo,
@@ -164,7 +177,7 @@ fun GestionUsuariosContent(
                         )
                         SelectorDesplegableEdicion(
                             etiqueta = "Rol del Usuario",
-                            opciones = uiState.listaRoles,
+                            opciones = opcionesRoles,
                             seleccionActual = uiState.editRolSeleccionado,
                             onOpcionSeleccionada = onEditRolSeleccionado,
                             habilitado = !esAdmin
@@ -304,7 +317,7 @@ fun SelectorDesplegableEdicion(
                 .menuAnchor()
         )
         ExposedDropdownMenu(
-            expanded = expandido,
+            expanded = expandido && habilitado,
             onDismissRequest = { expandido = false }
         ) {
             opciones.forEach { opcion ->
@@ -327,38 +340,4 @@ private fun formatearRut(rut: String): String {
     val numero = rutLimpio.dropLast(1)
     val numeroFormateado = numero.reversed().chunked(3).joinToString(".").reversed()
     return "$numeroFormateado-$dv"
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GestionUsuariosPreview() {
-    cl.duoc.rinconsurapp.ui.theme.RinconSurAppTheme {
-        GestionUsuariosContent(
-            uiState = GestionUsuariosUiState(
-                listaUsuarios = listOf(
-                    Usuario(
-                        id = 1,
-                        rut = "214297353",
-                        contrasena = "",
-                        nombreCompleto = "Vicente Ponce",
-                        correo = "v.ponce@rinconsur.cl",
-                        telefono = "987654321",
-                        rolId = 2,
-                        rolNombre = "Administrador"
-                    )
-                )
-            ),
-            onEliminar = {},
-            onCancelarEliminacion = {},
-            onConfirmarEliminacion = {},
-            onLimpiarErrorGlobal = {},
-            onEditar = {},
-            onCancelarEdicion = {},
-            onConfirmarEdicion = {},
-            onEditCorreoCambiado = {},
-            onEditTelefonoCambiado = {},
-            onEditRolSeleccionado = {},
-            onVolver = {}
-        )
-    }
 }
