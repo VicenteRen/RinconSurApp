@@ -4,18 +4,24 @@ import android.app.Application
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import cl.duoc.rinconsurapp.data.ConvertidorImagen
-import cl.duoc.rinconsurapp.data.RinconSurDbHelper
 import cl.duoc.rinconsurapp.data.SesionPreferencias
+import cl.duoc.rinconsurapp.data.UsuarioRepository
 import cl.duoc.rinconsurapp.model.PerfilUsuarioUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val db = RinconSurDbHelper(application)
+    companion object {
+        private val PATRON_CORREO = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$")
+    }
+
+    private val repositorio = UsuarioRepository()
     private val sesion = SesionPreferencias(application)
 
     private val _uiState = MutableStateFlow(PerfilUsuarioUiState())
@@ -31,21 +37,25 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun cargarUsuarioDeSesion() {
-        val usuario = db.buscarUsuarioPorId(obtenerIdActivo())
-
-        if (usuario != null) {
-            _uiState.update {
-                it.copy(
-                    nombreCompleto = usuario.nombreCompleto,
-                    rut = usuario.rut,
-                    cargo = usuario.rolNombre,
-                    telefonoContacto = usuario.telefono,
-                    correoContacto = usuario.correo,
-                    avatar = usuario.avatar,
-                    esValido = true,
-                    informacionModificadaExitosamente = false,
-                    cerrarSesionExitoso = false
-                )
+        viewModelScope.launch {
+            try {
+                val usuario = repositorio.buscarPorId(obtenerIdActivo())
+                _uiState.update {
+                    it.copy(
+                        nombreCompleto = usuario.nombreCompleto,
+                        rut = usuario.rut,
+                        cargo = usuario.rolNombre,
+                        telefonoContacto = usuario.telefono,
+                        correoContacto = usuario.correo,
+                        avatar = usuario.avatar,
+                        errorCorreo = null,
+                        errorTelefono = null,
+                        esValido = true,
+                        informacionModificadaExitosamente = false,
+                        cerrarSesionExitoso = false
+                    )
+                }
+            } catch (_: Exception) {
             }
         }
     }
@@ -61,9 +71,18 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
 
     private fun guardarAvatar(bytes: ByteArray) {
         val idUsuario = obtenerIdActivo()
-        db.actualizarAvatar(idUsuario, bytes)
-        val usuarioActualizado = db.buscarUsuarioPorId(idUsuario)
-        _uiState.update { it.copy(avatar = usuarioActualizado?.avatar) }
+        viewModelScope.launch {
+            try {
+                val usuarioActualizado = repositorio.actualizarAvatar(idUsuario, bytes)
+                _uiState.update {
+                    it.copy(
+                        avatar = usuarioActualizado.avatar ?: bytes,
+                        informacionModificadaExitosamente = true
+                    )
+                }
+            } catch (_: Exception) {
+            }
+        }
     }
 
     fun alCambiarTelefono(nuevoTelefono: String) {
@@ -75,10 +94,22 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
         } else null
 
         _uiState.update { estado ->
-            val valido = nuevoTelefono.length == 9 && error == null && estado.errorCorreo == null && estado.correoContacto.isNotBlank()
+            val errorCorreoLimpio = if (
+                estado.errorCorreo == "Formato de correo inválido" ||
+                estado.errorCorreo == "El correo es obligatorio"
+            ) {
+                estado.errorCorreo
+            } else null
+
+            val valido = nuevoTelefono.length == 9 &&
+                    error == null &&
+                    errorCorreoLimpio == null &&
+                    estado.correoContacto.trim().isNotBlank()
+
             estado.copy(
                 telefonoContacto = nuevoTelefono,
                 errorTelefono = error,
+                errorCorreo = errorCorreoLimpio,
                 esValido = valido,
                 informacionModificadaExitosamente = false
             )
@@ -86,19 +117,27 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun alCambiarCorreo(nuevoCorreo: String) {
-        val formatoValido = nuevoCorreo.matches(Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$"))
+        val correoMinuscula = nuevoCorreo.lowercase()
+        val correoLimpio = correoMinuscula.trim()
+        val formatoValido = correoLimpio.matches(PATRON_CORREO)
 
-        val error = if (nuevoCorreo.isNotBlank() && !formatoValido) {
+        val error = if (correoLimpio.isNotBlank() && !formatoValido) {
             "Formato de correo inválido"
-        } else if (nuevoCorreo.isBlank()) {
+        } else if (correoLimpio.isBlank()) {
             "El correo es obligatorio"
         } else null
 
         _uiState.update { estado ->
-            val valido = error == null && estado.errorTelefono == null && estado.telefonoContacto.length == 9
+            val errorTelefonoLimpio = if (estado.errorTelefono?.startsWith("El teléfono debe tener") == true) {
+                estado.errorTelefono
+            } else null
+
+            val valido = error == null && errorTelefonoLimpio == null && estado.telefonoContacto.length == 9
+
             estado.copy(
-                correoContacto = nuevoCorreo,
+                correoContacto = correoMinuscula,
                 errorCorreo = error,
+                errorTelefono = errorTelefonoLimpio,
                 esValido = valido,
                 informacionModificadaExitosamente = false
             )
@@ -108,19 +147,46 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
     fun guardarCambios() {
         val estado = _uiState.value
         if (estado.esValido) {
-            val idActualizar = obtenerIdActivo()
-            db.actualizarContactoUsuario(idActualizar, estado.correoContacto.trim(), estado.telefonoContacto)
-            _uiState.update { it.copy(informacionModificadaExitosamente = true) }
+            viewModelScope.launch {
+                try {
+                    val idActualizar = obtenerIdActivo()
+                    repositorio.actualizarPerfil(
+                        id = idActualizar,
+                        nombreCompleto = estado.nombreCompleto,
+                        correo = estado.correoContacto.trim(),
+                        telefono = estado.telefonoContacto
+                    )
+                    _uiState.update {
+                        it.copy(
+                            errorCorreo = null,
+                            errorTelefono = null,
+                            informacionModificadaExitosamente = true
+                        )
+                    }
+                } catch (e: Exception) {
+                    val mensaje = e.message ?: "Error al actualizar la información"
+                    _uiState.update { actual ->
+                        if (mensaje.contains("teléfono", ignoreCase = true) ||
+                            mensaje.contains("telefono", ignoreCase = true)
+                        ) {
+                            actual.copy(
+                                errorTelefono = mensaje,
+                                informacionModificadaExitosamente = false
+                            )
+                        } else {
+                            actual.copy(
+                                errorCorreo = mensaje,
+                                informacionModificadaExitosamente = false
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
     fun cerrarSesion() {
         sesion.borrar()
         _uiState.update { it.copy(cerrarSesionExitoso = true) }
-    }
-
-    override fun onCleared() {
-        db.close()
-        super.onCleared()
     }
 }

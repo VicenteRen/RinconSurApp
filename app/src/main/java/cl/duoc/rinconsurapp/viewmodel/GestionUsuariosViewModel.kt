@@ -1,8 +1,8 @@
 package cl.duoc.rinconsurapp.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import cl.duoc.rinconsurapp.data.RinconSurDbHelper
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import cl.duoc.rinconsurapp.data.UsuarioRepository
 import cl.duoc.rinconsurapp.model.GestionUsuariosUiState
 import cl.duoc.rinconsurapp.model.Rol
 import cl.duoc.rinconsurapp.model.Usuario
@@ -10,11 +10,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class GestionUsuariosViewModel(application: Application) : AndroidViewModel(application) {
+class GestionUsuariosViewModel : ViewModel() {
 
-    private val db = RinconSurDbHelper(application)
-    private val _uiState = MutableStateFlow(GestionUsuariosUiState())
+    companion object {
+        private val ROLES_DISPONIBLES = listOf("Observador", "Administrador")
+        private val PATRON_CORREO = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$")
+    }
+
+    private val repositorio = UsuarioRepository()
+    private val _uiState = MutableStateFlow(GestionUsuariosUiState(listaRoles = ROLES_DISPONIBLES))
     val uiState: StateFlow<GestionUsuariosUiState> = _uiState.asStateFlow()
 
     init {
@@ -22,8 +28,14 @@ class GestionUsuariosViewModel(application: Application) : AndroidViewModel(appl
     }
 
     fun cargarUsuarios() {
-        val usuariosActivos = db.listarUsuariosActivos()
-        _uiState.update { it.copy(listaUsuarios = usuariosActivos) }
+        viewModelScope.launch {
+            try {
+                val usuariosActivos = repositorio.listarActivos()
+                _uiState.update { it.copy(listaUsuarios = usuariosActivos, listaRoles = ROLES_DISPONIBLES) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorGlobal = e.message ?: "Error al cargar usuarios") }
+            }
+        }
     }
 
     fun confirmarEliminacion(usuario: Usuario) {
@@ -42,11 +54,16 @@ class GestionUsuariosViewModel(application: Application) : AndroidViewModel(appl
     }
 
     fun eliminarUsuario() {
-        _uiState.value.usuarioAEliminar?.let { usuario ->
-            db.eliminarUsuario(usuario.id)
-            cargarUsuarios()
-        }
+        val usuario = _uiState.value.usuarioAEliminar ?: return
         cancelarEliminacion()
+        viewModelScope.launch {
+            try {
+                repositorio.eliminarUsuario(usuario.id)
+                cargarUsuarios()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorGlobal = e.message ?: "Error al eliminar usuario") }
+            }
+        }
     }
 
     fun limpiarErrorGlobal() {
@@ -61,6 +78,7 @@ class GestionUsuariosViewModel(application: Application) : AndroidViewModel(appl
                 editCorreo = usuario.correo,
                 editTelefono = usuario.telefono,
                 editRolSeleccionado = usuario.rolNombre,
+                listaRoles = ROLES_DISPONIBLES,
                 editError = null
             )
         }
@@ -73,24 +91,25 @@ class GestionUsuariosViewModel(application: Application) : AndroidViewModel(appl
     }
 
     fun onEditCorreoCambiado(correo: String) {
-        _uiState.update { it.copy(editCorreo = correo.lowercase()) }
+        _uiState.update { it.copy(editCorreo = correo.lowercase(), editError = null) }
     }
 
     fun onEditTelefonoCambiado(telefono: String) {
         val telefonoLimpio = telefono.filter { it.isDigit() }
         if (telefonoLimpio.length > 9) return
-        _uiState.update { it.copy(editTelefono = telefonoLimpio) }
+        _uiState.update { it.copy(editTelefono = telefonoLimpio, editError = null) }
     }
 
     fun onEditRolSeleccionado(rol: String) {
-        _uiState.update { it.copy(editRolSeleccionado = rol) }
+        _uiState.update { it.copy(editRolSeleccionado = rol, editError = null) }
     }
 
     fun guardarEdicion() {
         val state = _uiState.value
         val usuario = state.usuarioAEditar ?: return
 
-        if (state.editCorreo.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(state.editCorreo).matches()) {
+        val correoLimpio = state.editCorreo.trim()
+        if (correoLimpio.isBlank() || !correoLimpio.matches(PATRON_CORREO)) {
             _uiState.update { it.copy(editError = "Correo inválido") }
             return
         }
@@ -107,17 +126,14 @@ class GestionUsuariosViewModel(application: Application) : AndroidViewModel(appl
 
         val rolId = if (state.editRolSeleccionado == "Administrador") Rol.ID_ADMIN else Rol.ID_OBSERVADOR
 
-        try {
-            db.actualizarUsuarioDesdeAdmin(usuario.id, state.editCorreo, state.editTelefono, rolId)
-            cargarUsuarios()
-            cancelarEdicion()
-        } catch (e: Exception) {
-            _uiState.update { it.copy(editError = "Error al actualizar la base de datos") }
+        viewModelScope.launch {
+            try {
+                repositorio.actualizarDesdeAdmin(usuario.id, correoLimpio, state.editTelefono, rolId)
+                cargarUsuarios()
+                cancelarEdicion()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(editError = e.message ?: "Error al actualizar usuario") }
+            }
         }
-    }
-
-    override fun onCleared() {
-        db.close()
-        super.onCleared()
     }
 }

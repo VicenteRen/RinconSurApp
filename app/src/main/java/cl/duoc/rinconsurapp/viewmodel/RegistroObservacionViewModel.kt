@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cl.duoc.rinconsurapp.data.ObservacionRepository
-import cl.duoc.rinconsurapp.data.RinconSurDbHelper
 import cl.duoc.rinconsurapp.data.SesionPreferencias
+import cl.duoc.rinconsurapp.data.UsuarioRepository
 import cl.duoc.rinconsurapp.model.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +16,9 @@ import kotlinx.coroutines.launch
 class RegistroObservacionViewModel : ViewModel() {
 
     private val repositorio = ObservacionRepository()
+    private val usuarioRepositorio = UsuarioRepository()
     private var usuarioIdActivo: Long = 1L
+    private var nombreCargado: Boolean = false
 
     private val _uiState = MutableStateFlow(RegistroObservacionUiState())
     val uiState: StateFlow<RegistroObservacionUiState> = _uiState.asStateFlow()
@@ -36,16 +38,20 @@ class RegistroObservacionViewModel : ViewModel() {
 
     fun cargarNombreObservador(context: Context) {
         val sesion = SesionPreferencias(context)
-        val db = RinconSurDbHelper(context)
-        try {
-            val idGuardado = sesion.leer()
-            usuarioIdActivo = if (idGuardado != SesionPreferencias.SIN_SESION) idGuardado else 1L
-            val usuario = db.buscarUsuarioPorId(usuarioIdActivo)
-            if (usuario != null) {
+        val idGuardado = sesion.leer()
+        val nuevoId = if (idGuardado != SesionPreferencias.SIN_SESION) idGuardado else 1L
+        if (nuevoId != usuarioIdActivo) {
+            nombreCargado = false
+        }
+        usuarioIdActivo = nuevoId
+
+        viewModelScope.launch {
+            try {
+                val usuario = usuarioRepositorio.buscarPorId(usuarioIdActivo)
+                nombreCargado = true
                 _uiState.update { it.copy(nombreObservador = usuario.nombreCompleto) }
+            } catch (_: Exception) {
             }
-        } finally {
-            db.close()
         }
     }
 
@@ -81,6 +87,14 @@ class RegistroObservacionViewModel : ViewModel() {
     }
 
     fun onRegistrar(onExito: () -> Unit, onError: (String) -> Unit) = ejecutar(onError) {
+        var nombreFinal = _uiState.value.nombreObservador
+        if (!nombreCargado || nombreFinal.isBlank()) {
+            val usuario = usuarioRepositorio.buscarPorId(usuarioIdActivo)
+            nombreFinal = usuario.nombreCompleto
+            nombreCargado = true
+            _uiState.update { it.copy(nombreObservador = nombreFinal) }
+        }
+
         val estadoActual = _uiState.value
 
         val nuevoRegistro = RegistroObservacion(
@@ -90,14 +104,14 @@ class RegistroObservacionViewModel : ViewModel() {
             tieneComprasExternas = estadoActual.tieneComprasExternas,
             accesoDestino = estadoActual.accesoDestino?.etiqueta,
             usuarioId = usuarioIdActivo,
-            nombreObservador = estadoActual.nombreObservador
+            nombreObservador = nombreFinal
         )
 
         repositorio.guardarObservacion(nuevoRegistro)
 
         _uiState.update { estado ->
             RegistroObservacionUiState(
-                nombreObservador = estado.nombreObservador,
+                nombreObservador = nombreFinal,
                 listaAccesos = estado.listaAccesos,
                 accesoDestino = estado.accesoDestino,
                 registroExitoso = true

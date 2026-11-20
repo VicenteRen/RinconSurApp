@@ -1,13 +1,14 @@
 package cl.duoc.rinconsurapp.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,17 +37,18 @@ fun InicioSesionScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(uiState.autenticado) {
+        if (uiState.autenticado) {
+            onLoginExitoso()
+        }
+    }
+
     InicioSesionContent(
         uiState = uiState,
         alCambiarRut = { viewModel.onRutCambiado(it) },
         alCambiarContrasena = { viewModel.onContrasenaCambiada(it) },
         alAlternarVisibilidad = { viewModel.alternarVisibilidadContrasena() },
-        alIniciarSesion = {
-            viewModel.iniciarSesion()
-            if (viewModel.uiState.value.autenticado) {
-                onLoginExitoso()
-            }
-        },
+        alIniciarSesion = { viewModel.iniciarSesion() },
         onOlvideContrasena = onOlvideContrasena
     )
 }
@@ -60,7 +62,6 @@ fun InicioSesionContent(
     alIniciarSesion: () -> Unit,
     onOlvideContrasena: () -> Unit
 ) {
-
     val logoRes = if (isSystemInDarkTheme()) {
         R.drawable.logo_rincon_sur_tema_oscuro
     } else {
@@ -107,7 +108,6 @@ fun InicioSesionContent(
                 error = uiState.contrasenaError
             )
 
-
             TextButton(
                 onClick = onOlvideContrasena,
                 modifier = Modifier.align(Alignment.End)
@@ -142,10 +142,9 @@ fun InicioSesionContent(
                 Text(
                     text = stringResource(id = R.string.msg_acceso_concedido),
                     color = Exito,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .align(Alignment.CenterHorizontally)
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 16.dp)
                 )
             }
         }

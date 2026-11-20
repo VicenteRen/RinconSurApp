@@ -49,6 +49,7 @@ class RinconSurDbHelper(context: Context) :
         private const val REG_FECHA_HORA = "fecha_hora"
         private const val REG_USUARIO = "id_usuario"
 
+
         private const val SQL_CREAR_ROLES =
             "CREATE TABLE $TABLA_ROLES (" +
                     "$ROL_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -247,7 +248,7 @@ class RinconSurDbHelper(context: Context) :
     }
 
     fun listarTodosLosRegistros(): List<RegistroObservacion> =
-        consultarRegistros("$SQL_SELECT_REGISTROS ORDER BY reg.$REG_ID DESC", null)
+        consultarRegistros("$SQL_SELECT_REGISTROS WHERE reg.$REG_CLASIFICACION = 'Visita' ORDER BY reg.$REG_ID DESC", null)
 
     fun listarRegistrosPorUsuario(idUsuario: Long): List<RegistroObservacion> =
         consultarRegistros(
@@ -292,7 +293,7 @@ class RinconSurDbHelper(context: Context) :
                 lista.add(
                     RegistroObservacion(
                         id = cursor.getLong(cursor.getColumnIndexOrThrow(REG_ID)),
-                        clasificacion = cursor.getString(cursor.getColumnIndexOrThrow(REG_CLASIFICACION)),
+                        clasificacion = cursor.getString(cursor.getColumnIndexOrThrow(REG_CLASIFICACION )) ,
                         rangoEtario = cursor.getString(cursor.getColumnIndexOrThrow(REG_RANGO)),
                         compania = cursor.getString(cursor.getColumnIndexOrThrow(REG_COMPANIA)),
                         tieneComprasExternas = cursor.getInt(cursor.getColumnIndexOrThrow(REG_COMPRAS)) == 1,

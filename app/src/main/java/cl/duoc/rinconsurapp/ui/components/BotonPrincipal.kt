@@ -12,12 +12,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cl.duoc.rinconsurapp.R
 import cl.duoc.rinconsurapp.ui.styles.EstilosBoton
 import cl.duoc.rinconsurapp.ui.styles.estiloAltoBoton
+import cl.duoc.rinconsurapp.ui.theme.Primario
 import cl.duoc.rinconsurapp.ui.theme.RinconSurAppTheme
 
 
@@ -27,6 +29,7 @@ fun BotonPrincipal(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     habilitado: Boolean = true,
+    colorFondo : Color = Primario,
     @DrawableRes icono: Int? = null
 ) {
     Button(
@@ -34,7 +37,12 @@ fun BotonPrincipal(
         modifier = modifier.estiloAltoBoton(),
         enabled = habilitado,
         shape = EstilosBoton.forma,
-        colors = EstilosBoton.coloresPrincipal(),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = colorFondo,
+            contentColor = cl.duoc.rinconsurapp.ui.theme.Blanco,
+            disabledContentColor = cl.duoc.rinconsurapp.ui.theme.GrisDeshabilitado,
+            disabledContainerColor = cl.duoc.rinconsurapp.ui.theme.Blanco
+        ),
         elevation = EstilosBoton.elevacion(),
         contentPadding = EstilosBoton.relleno
     ) {

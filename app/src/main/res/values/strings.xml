@@ -49,7 +49,6 @@
     <string name="req_longitud">Mínimo 8 caracteres</string>
     <string name="req_numero">Al menos un número (0-9)</string>
     <string name="req_mayuscula">Al menos una letra mayúscula</string>
-    <string name="req_sin_especiales">Sin caracteres especiales (solo letras y números)</string>
     <string name="titulo_restablecer">Restablecer Contraseña</string>
     <string name="etiqueta_seleccione_pregunta">Seleccione su pregunta de seguridad</string>
     <string name="etiqueta_respuesta">Respuesta</string>

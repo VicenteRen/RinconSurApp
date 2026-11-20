@@ -38,7 +38,7 @@ data class RegistroObservacionUiState(
     val clasificacion: Clasificacion = Clasificacion.TRANSITO,
     val rangoEtario: RangoEtario = RangoEtario.RANGO_26_40,
     val compania: Compania = Compania.SOLO,
-    val tieneComprasExternas: Boolean = false,
+    val tieneComprasExternas: Boolean = true,
     val registroExitoso: Boolean = false,
     val mostrarBienvenida: Boolean = false,
     val cargando: Boolean = false

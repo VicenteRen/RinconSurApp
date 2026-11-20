@@ -19,7 +19,6 @@ data class RestablecerContrasenaUiState(
     val tieneLongitudValida: Boolean = false,
     val tieneNumero: Boolean = false,
     val tieneMayuscula: Boolean = false,
-    val sinCaracteresEspeciales: Boolean = false,
     val errorGeneral: String? = null,
     val restablecimientoExitoso: Boolean = false,
     val formularioValido: Boolean = false
