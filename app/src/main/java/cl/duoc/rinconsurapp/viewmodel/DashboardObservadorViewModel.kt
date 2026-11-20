@@ -1,9 +1,13 @@
+
 package cl.duoc.rinconsurapp.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
-import cl.duoc.rinconsurapp.data.RinconSurDbHelper
+import androidx.lifecycle.viewModelScope
+import cl.duoc.rinconsurapp.data.ObservacionRepository
 import cl.duoc.rinconsurapp.data.SesionPreferencias
+import cl.duoc.rinconsurapp.data.UsuarioRepository
 import cl.duoc.rinconsurapp.model.Clasificacion
 import cl.duoc.rinconsurapp.model.DashboardObservadorUiState
 import cl.duoc.rinconsurapp.model.RangoEtario
@@ -11,77 +15,92 @@ import cl.duoc.rinconsurapp.model.Rol
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class DashboardObservadorViewModel(application: Application) :
     AndroidViewModel(application) {
 
-    private val db = RinconSurDbHelper(application)
+    private val repositorio = ObservacionRepository()
+    private val usuarioRepositorio = UsuarioRepository()
     private val sesion = SesionPreferencias(application)
 
     private val _uiState = MutableStateFlow(DashboardObservadorUiState())
-    val uiState: StateFlow<DashboardObservadorUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<DashboardObservadorUiState> =
+        _uiState.asStateFlow()
 
     init {
         cargarEstadisticas()
     }
 
     fun cargarEstadisticas() {
-        val usuario = db.buscarUsuarioPorId(sesion.leer())
+        viewModelScope.launch {
+            try {
+                val idUsuario = sesion.leer()
 
-        if (usuario?.rolId != Rol.ID_OBSERVADOR) {
-            _uiState.value = DashboardObservadorUiState()
-            return
-        }
+                if (idUsuario == SesionPreferencias.SIN_SESION) {
+                    _uiState.value = DashboardObservadorUiState()
+                    return@launch
+                }
 
-        val registros = db.listarRegistrosPorUsuario(usuario.id)
+                val usuario = usuarioRepositorio.buscarPorId(idUsuario)
 
-        val visitas = registros.count {
-            it.clasificacion == Clasificacion.VISITA.etiqueta
-        }
+                if (usuario.rolId != Rol.ID_OBSERVADOR || !usuario.activo) {
+                    _uiState.value = DashboardObservadorUiState()
+                    return@launch
+                }
 
-        val transito = registros.count {
-            it.clasificacion == Clasificacion.TRANSITO.etiqueta
-        }
+                val registros = repositorio.listarPorUsuario(idUsuario)
 
-        val noDeterminado = registros.count {
-            it.clasificacion == Clasificacion.NO_DETERMINADO.etiqueta
-        }
+                val visitas = registros.count {
+                    it.clasificacion == Clasificacion.VISITA.etiqueta
+                }
 
-        val totalClasificados = visitas + transito + noDeterminado
+                val transito = registros.count {
+                    it.clasificacion == Clasificacion.TRANSITO.etiqueta
+                }
 
-        val porcentajeVisitas = if (totalClasificados > 0) {
-            visitas.toFloat() / totalClasificados * 100f
-        } else {
-            null
-        }
+                val noDeterminado = registros.count {
+                    it.clasificacion == Clasificacion.NO_DETERMINADO.etiqueta
+                }
 
-        val porcentajeTransito = if (totalClasificados > 0) {
-            transito.toFloat() / totalClasificados * 100f
-        } else {
-            null
-        }
+                val totalClasificados = visitas + transito + noDeterminado
 
-        val registrosPorEdad = RangoEtario.entries.associate {
-                rango ->
-            rango.etiqueta to registros.count {
-                it.rangoEtario == rango.etiqueta
+                val porcentajeVisitas = if (totalClasificados > 0) {
+                    visitas.toFloat() / totalClasificados * 100f
+                } else {
+                    null
+                }
+
+                val porcentajeTransito = if (totalClasificados > 0) {
+                    transito.toFloat() / totalClasificados * 100f
+                } else {
+                    null
+                }
+
+                val registrosPorEdad = RangoEtario.entries.associate { rango ->
+                    rango.etiqueta to registros.count {
+                        it.rangoEtario == rango.etiqueta
+                    }
+                }
+
+                _uiState.value = DashboardObservadorUiState(
+                    autorizado = true,
+                    totalRegistros = registros.size,
+                    totalVisitas = visitas,
+                    totalTransito = transito,
+                    totalNoDeterminado = noDeterminado,
+                    porcentajeVisitas = porcentajeVisitas,
+                    porcentajeTransito = porcentajeTransito,
+                    registrosPorEdad = registrosPorEdad
+                )
+
+            } catch (e: Exception) {
+                Log.e(
+                    "DashboardObservador",
+                    "Error al cargar estadísticas desde el microservicio",
+                    e
+                )
             }
         }
-
-        _uiState.value = DashboardObservadorUiState(
-            autorizado = true,
-            totalRegistros = registros.size,
-            totalVisitas = visitas,
-            totalTransito = transito,
-            totalNoDeterminado = noDeterminado,
-            porcentajeVisitas = porcentajeVisitas,
-            porcentajeTransito = porcentajeTransito,
-            registrosPorEdad = registrosPorEdad
-        )
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        db.close()
     }
 }

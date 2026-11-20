@@ -1,10 +1,10 @@
 package cl.duoc.rinconsurapp.data.remote
 
 import retrofit2.http.Body
-import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.PUT
 
 interface ObservacionApi {
 
@@ -17,6 +17,15 @@ interface ObservacionApi {
     @GET("api/observaciones/usuario/{usuarioId}")
     suspend fun listarPorUsuario(@Path("usuarioId") usuarioId: Long): List<RegistroObservacionResponse>
 
-    @DELETE("api/observaciones/{id}")
-    suspend fun eliminar(@Path("id") id: Long)
+    @PUT("api/observaciones/{id}/anular")
+    suspend fun anular(
+        @Path("id") id: Long,
+        @Body datos: SolicitudAnulacionRequest
+    )
 }
+
+data class SolicitudAnulacionRequest(
+    val rut: String,
+    val contrasena: String,
+    val motivo: String
+)

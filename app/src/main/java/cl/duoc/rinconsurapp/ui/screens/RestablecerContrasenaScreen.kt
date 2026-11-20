@@ -1,36 +1,20 @@
+
 package cl.duoc.rinconsurapp.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.rinconsurapp.R
 import cl.duoc.rinconsurapp.model.RestablecerContrasenaUiState
 import cl.duoc.rinconsurapp.ui.components.BotonPrincipal
@@ -38,26 +22,34 @@ import cl.duoc.rinconsurapp.ui.components.CampoContrasena
 import cl.duoc.rinconsurapp.ui.components.CampoTexto
 import cl.duoc.rinconsurapp.ui.theme.Exito
 import cl.duoc.rinconsurapp.ui.theme.Primario
-import cl.duoc.rinconsurapp.ui.theme.RinconSurAppTheme
 import cl.duoc.rinconsurapp.viewmodel.RestablecerContrasenaViewModel
-
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 @Composable
 fun RestablecerContrasenaScreen(
-    viewModel: RestablecerContrasenaViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    viewModel: RestablecerContrasenaViewModel = viewModel(),
     onVolver: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val estado by viewModel.uiState.collectAsStateWithLifecycle()
 
     RestablecerContrasenaContent(
-        uiState = uiState,
-        onRutCambiado = { viewModel.onRutCambiado(it) },
-        onPreguntaSeleccionada = { viewModel.onPreguntaSeleccionada(it) },
-        onRespuestaCambiada = { viewModel.onRespuestaCambiada(it) },
-        onNuevaContrasenaCambiada = { viewModel.onNuevaContrasenaCambiada(it) },
-        onConfirmarContrasenaCambiada = { viewModel.onConfirmarContrasenaCambiada(it) },
-        onAlternarVisibilidad = { viewModel.alternarVisibilidadContrasenas() },
-        onRestablecer = { viewModel.intentarRestablecerContrasena() },
-        onVolver = onVolver,
+        uiState = estado,
+        onRutCambiado = viewModel::onRutCambiado,
+        onPreguntaSeleccionada = viewModel::onPreguntaSeleccionada,
+        onRespuestaCambiada = viewModel::onRespuestaCambiada,
+        onNuevaContrasenaCambiada = viewModel::onNuevaContrasenaCambiada,
+        onConfirmarContrasenaCambiada =
+            viewModel::onConfirmarContrasenaCambiada,
+        onAlternarVisibilidad =
+            viewModel::alternarVisibilidadContrasenas,
+        onVerificar = viewModel::verificarIdentidad,
+        onRestablecer = viewModel::intentarRestablecerContrasena,
+        onVolver = {
+            if (estado.identidadVerificada) {
+                viewModel.volverAlPrimerPaso()
+            } else {
+                onVolver()
+            }
+        },
         onDialogoCerrado = {
             viewModel.onDialogoExitoCerrado()
             onVolver()
@@ -75,29 +67,28 @@ fun RestablecerContrasenaContent(
     onNuevaContrasenaCambiada: (String) -> Unit,
     onConfirmarContrasenaCambiada: (String) -> Unit,
     onAlternarVisibilidad: () -> Unit,
+    onVerificar: () -> Unit,
     onRestablecer: () -> Unit,
     onVolver: () -> Unit,
     onDialogoCerrado: () -> Unit
 ) {
-    val opcionesPreguntas = listOf(
-        stringResource(R.string.preg_mascota),
-        stringResource(R.string.preg_amigo),
-        stringResource(R.string.preg_ciudad)
-    )
-
-    if (uiState.preguntaSeleccionada.isEmpty() && opcionesPreguntas.isNotEmpty()) {
-        onPreguntaSeleccionada(opcionesPreguntas[0])
-    }
+    val pasoDos = uiState.identidadVerificada
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.titulo_restablecer), fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        if (pasoDos) "Nueva contraseña"
+                        else "Recuperar contraseña",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onVolver) {
                         Icon(
                             painter = painterResource(R.drawable.ic_volver),
-                            contentDescription = stringResource(R.string.cd_volver)
+                            contentDescription = "Volver"
                         )
                     }
                 },
@@ -107,137 +98,181 @@ fun RestablecerContrasenaContent(
                     navigationIconContentColor = Color.White
                 )
             )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
+        }
+    ) { padding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 32.dp),
+                .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = stringResource(R.string.etiqueta_seleccione_pregunta),
+                text = if (pasoDos) "Paso 2 de 2"
+                else "Paso 1 de 2",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
 
-            CampoTexto(
-                valor = uiState.rut,
-                onValorCambia = onRutCambiado,
-                etiqueta = stringResource(R.string.etiqueta_rut),
-                icono = R.drawable.ic_persona,
-                error = uiState.rutError
-            )
-
-            var expandido by remember { mutableStateOf(false) }
-
-            ExposedDropdownMenuBox(
-                expanded = expandido,
-                onExpandedChange = { expandido = it }
-            ) {
-                OutlinedTextField(
-                    value = uiState.preguntaSeleccionada,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text(stringResource(R.string.etiqueta_seleccione_pregunta)) },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandido) },
-                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
+            if (!pasoDos) {
+                Text(
+                    "Verifica tu identidad para recuperar el acceso a tu cuenta."
                 )
-                ExposedDropdownMenu(
+
+                CampoTexto(
+                    valor = uiState.rut,
+                    onValorCambia = onRutCambiado,
+                    etiqueta = stringResource(R.string.etiqueta_rut),
+                    icono = R.drawable.ic_persona,
+                    error = uiState.rutError
+                )
+
+                var expandido by remember {
+                    mutableStateOf(false)
+                }
+
+                ExposedDropdownMenuBox(
                     expanded = expandido,
-                    onDismissRequest = { expandido = false }
+                    onExpandedChange = { expandido = it }
                 ) {
-                    opcionesPreguntas.forEach { pregunta ->
-                        DropdownMenuItem(
-                            text = { Text(pregunta) },
-                            onClick = {
-                                onPreguntaSeleccionada(pregunta)
-                                expandido = false
-                            }
-                        )
+                    OutlinedTextField(
+                        value = uiState.preguntaSeleccionada,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Pregunta de seguridad") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = expandido
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(
+                                type = ExposedDropdownMenuAnchorType.PrimaryNotEditable
+                            )
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expandido,
+                        onDismissRequest = { expandido = false }
+                    ) {
+                        uiState.listaPreguntas.forEach { pregunta ->
+                            DropdownMenuItem(
+                                text = { Text(pregunta) },
+                                onClick = {
+                                    onPreguntaSeleccionada(pregunta)
+                                    expandido = false
+                                }
+                            )
+                        }
                     }
                 }
-            }
 
-            CampoTexto(
-                valor = uiState.respuestaSeguridad,
-                onValorCambia = onRespuestaCambiada,
-                etiqueta = stringResource(R.string.etiqueta_respuesta),
-                icono = R.drawable.ic_candado,
-                error = uiState.respuestaError
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = stringResource(R.string.titulo_crear_segura),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            CampoContrasena(
-                valor = uiState.nuevaContrasena,
-                onValorCambia = onNuevaContrasenaCambiada,
-                etiqueta = stringResource(R.string.etiqueta_nueva_contrasena),
-                visible = uiState.contrasenasVisibles,
-                onAlternarVisible = onAlternarVisibilidad,
-                error = null
-            )
-
-            CampoContrasena(
-                valor = uiState.confirmarContrasena,
-                onValorCambia = onConfirmarContrasenaCambiada,
-                etiqueta = stringResource(R.string.etiqueta_confirmar_contrasena),
-                visible = uiState.contrasenasVisibles,
-                onAlternarVisible = onAlternarVisibilidad,
-                error = uiState.contrasenaError
-            )
-
-            Column(modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)) {
-                Text(
-                    text = stringResource(R.string.titulo_requisitos_contrasena),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                CampoTexto(
+                    valor = uiState.respuestaSeguridad,
+                    onValorCambia = onRespuestaCambiada,
+                    etiqueta = "Respuesta de seguridad",
+                    icono = R.drawable.ic_candado,
+                    error = uiState.respuestaError
                 )
-                RequisitoTexto(texto = stringResource(R.string.req_longitud), cumplido = uiState.tieneLongitudValida)
-                RequisitoTexto(texto = stringResource(R.string.req_numero), cumplido = uiState.tieneNumero)
-                RequisitoTexto(texto = stringResource(R.string.req_mayuscula), cumplido = uiState.tieneMayuscula)
+
+                BotonPrincipal(
+                    texto = if (uiState.verificando)
+                        "Verificando..." else "Continuar",
+                    onClick = onVerificar,
+                    habilitado = !uiState.verificando &&
+                            uiState.rutError == null &&
+                            uiState.rut.isNotBlank() &&
+                            uiState.respuestaSeguridad.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                Text(
+                    "Identidad verificada. Crea tu nueva contraseña."
+                )
+
+                CampoContrasena(
+                    valor = uiState.nuevaContrasena,
+                    onValorCambia = onNuevaContrasenaCambiada,
+                    etiqueta = stringResource(
+                        R.string.etiqueta_nueva_contrasena
+                    ),
+                    visible = uiState.contrasenasVisibles,
+                    onAlternarVisible = onAlternarVisibilidad,
+                    error = null
+                )
+
+                CampoContrasena(
+                    valor = uiState.confirmarContrasena,
+                    onValorCambia = onConfirmarContrasenaCambiada,
+                    etiqueta = stringResource(
+                        R.string.etiqueta_confirmar_contrasena
+                    ),
+                    visible = uiState.contrasenasVisibles,
+                    onAlternarVisible = onAlternarVisibilidad,
+                    error = uiState.contrasenaError
+                )
+
+                Text(
+                    "Requisitos de contraseña",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                RequisitoTexto(
+                    "Mínimo 8 caracteres",
+                    uiState.tieneLongitudValida
+                )
+
+                RequisitoTexto(
+                    "Al menos un número",
+                    uiState.tieneNumero
+                )
+
+                RequisitoTexto(
+                    "Al menos una mayúscula",
+                    uiState.tieneMayuscula
+                )
+
+                RequisitoTexto(
+                    "Al menos un carácter especial",
+                    uiState.tieneEspecial
+                )
+
+                BotonPrincipal(
+                    texto = if (uiState.verificando)
+                        "Guardando..." else "Restablecer contraseña",
+                    onClick = onRestablecer,
+                    habilitado = uiState.formularioValido &&
+                            !uiState.verificando,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
-            if (uiState.errorGeneral != null) {
+            uiState.errorGeneral?.let { mensaje ->
                 Text(
-                    text = uiState.errorGeneral,
+                    text = mensaje,
                     color = MaterialTheme.colorScheme.error,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                    modifier = Modifier.align(
+                        Alignment.CenterHorizontally
+                    )
                 )
             }
-
-            BotonPrincipal(
-                texto = stringResource(R.string.btn_cambiar_contrasena),
-                onClick = onRestablecer,
-                habilitado = uiState.formularioValido,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
 
         if (uiState.restablecimientoExitoso) {
             AlertDialog(
                 onDismissRequest = onDialogoCerrado,
-                title = { Text(stringResource(R.string.titulo_restablecer)) },
-                text = { Text(stringResource(R.string.msg_contrasena_restablecida)) },
+                title = { Text("Contraseña restablecida") },
+                text = {
+                    Text(
+                        "Tu contraseña se actualizó correctamente. Ya puedes iniciar sesión."
+                    )
+                },
                 confirmButton = {
                     TextButton(onClick = onDialogoCerrado) {
-                        Text(stringResource(R.string.btn_ir_login))
+                        Text("Ir al inicio de sesión")
                     }
                 }
             )
@@ -246,31 +281,15 @@ fun RestablecerContrasenaContent(
 }
 
 @Composable
-fun RequisitoTexto(texto: String, cumplido: Boolean) {
-    val color = if (cumplido) Exito else MaterialTheme.colorScheme.error
+fun RequisitoTexto(
+    texto: String,
+    cumplido: Boolean
+) {
     Text(
-        text = texto,
+        text = "${if (cumplido) "✓" else "○"} $texto",
         style = MaterialTheme.typography.bodyMedium,
-        color = color,
-        modifier = Modifier.padding(vertical = 2.dp, horizontal = 8.dp)
+        color = if (cumplido)
+            Exito else MaterialTheme.colorScheme.error,
+        modifier = Modifier.padding(horizontal = 8.dp)
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RestablecerContrasenaPreview() {
-    RinconSurAppTheme {
-        RestablecerContrasenaContent(
-            uiState = RestablecerContrasenaUiState(),
-            onRutCambiado = {},
-            onPreguntaSeleccionada = {},
-            onRespuestaCambiada = {},
-            onNuevaContrasenaCambiada = {},
-            onConfirmarContrasenaCambiada = {},
-            onAlternarVisibilidad = {},
-            onRestablecer = {},
-            onVolver = {},
-            onDialogoCerrado = {}
-        )
-    }
 }

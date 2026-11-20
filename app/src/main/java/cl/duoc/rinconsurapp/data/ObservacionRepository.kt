@@ -13,6 +13,8 @@ import org.json.JSONObject
 import retrofit2.HttpException
 import java.io.IOException
 
+import cl.duoc.rinconsurapp.data.remote.SolicitudAnulacionRequest
+
 class ObservacionRepository(
     private val observacionApi: ObservacionApi = RetrofitClient.observacionApi,
     private val accesoApi: AccesoApi = RetrofitClient.accesoApi
@@ -38,8 +40,43 @@ class ObservacionRepository(
     suspend fun listarPorUsuario(usuarioId: Long): List<RegistroObservacion> =
         llamar { observacionApi.listarPorUsuario(usuarioId) }.map { it.aRegistroObservacion() }
 
-    suspend fun eliminarObservacion(id: Long) =
-        llamar { observacionApi.eliminar(id) }
+
+    suspend fun anularObservacion(
+        id: Long,
+        rut: String,
+        contrasena: String,
+        motivo: String
+    ) {
+        val motivoValidado = motivo.trim()
+
+        require(motivoValidado.length in 10..255) {
+            "El motivo debe tener entre 10 y 255 caracteres."
+        }
+
+        require(motivoValidado.any { it.isLetter() }) {
+            "El motivo debe contener letras."
+        }
+
+        require(motivoValidado.none { it.isISOControl() }) {
+            "El motivo contiene caracteres no permitidos."
+        }
+
+        require(contrasena.isNotBlank()) {
+            "Debes ingresar tu contraseña actual."
+        }
+
+        llamar {
+            observacionApi.anular(
+                id,
+                SolicitudAnulacionRequest(
+                    rut = rut.trim(),
+                    contrasena = contrasena,
+                    motivo = motivoValidado
+                )
+            )
+        }
+    }
+
 
     // --- Operaciones de Accesos ---
     suspend fun listarAccesosActivos(): List<Acceso> =
@@ -71,6 +108,15 @@ class ObservacionRepository(
         } catch (ex: Exception) {
             ""
         }
-        return mensaje.ifBlank { "Error del servidor (${e.code()})" }
+        return mensaje.ifBlank {
+            when (e.code()) {
+                400 -> "Verifica los datos ingresados."
+                401 -> "Debes iniciar sesión nuevamente."
+                403 -> "Contraseña incorrecta o no tienes permisos para anular."
+                404 -> "La observación no fue encontrada."
+                409 -> "Esta observación ya fue anulada."
+                else -> "No se pudo completar la operación. Inténtalo nuevamente."
+            }
+        }
     }
 }

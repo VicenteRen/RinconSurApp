@@ -126,15 +126,22 @@ class UsuarioRepository(
             )
         }
 
-    suspend fun recuperarContrasena(rut: String, nuevaContrasena: String) =
-        llamar {
-            usuarioApi.recuperarContrasena(
-                mapOf(
-                    "rut" to rut.trim(),
-                    "nuevaContrasena" to nuevaContrasena
-                )
+
+    suspend fun recuperarContrasena(
+        rut: String,
+        preguntaSeguridad: String,
+        respuestaSeguridad: String,
+        nuevaContrasena: String
+    ) = llamar {
+        usuarioApi.recuperarContrasena(
+            mapOf(
+                "rut" to rut.trim(),
+                "preguntaSeguridad" to preguntaSeguridad,
+                "respuestaSeguridad" to respuestaSeguridad.trim(),
+                "nuevaContrasena" to nuevaContrasena
             )
-        }
+        )
+    }
 
     suspend fun eliminarUsuario(id: Long) =
         llamar { usuarioApi.eliminar(id) }

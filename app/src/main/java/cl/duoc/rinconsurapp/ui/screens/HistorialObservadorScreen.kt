@@ -1,3 +1,4 @@
+
 package cl.duoc.rinconsurapp.ui.screens
 
 import androidx.compose.foundation.layout.*
@@ -7,16 +8,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cl.duoc.rinconsurapp.R
 import cl.duoc.rinconsurapp.model.RegistroObservacion
+import cl.duoc.rinconsurapp.ui.components.DialogoAnularObservacion
 import cl.duoc.rinconsurapp.ui.theme.Primario
+import cl.duoc.rinconsurapp.ui.theme.PrimarioOscuro
 import cl.duoc.rinconsurapp.viewmodel.HistorialObservadorViewModel
 import kotlinx.coroutines.launch
-import cl.duoc.rinconsurapp.ui.theme.PrimarioOscuro
-import androidx.compose.ui.res.stringResource
-import cl.duoc.rinconsurapp.R
 
 @Composable
 fun HistorialObservadorScreen(
@@ -29,8 +31,17 @@ fun HistorialObservadorScreen(
     HistorialObservadorContent(
         registros = registros,
         autorizado = autorizado,
-        alActualizar = { viewModel.cargarRegistros() },
-        alEliminar = { id -> viewModel.eliminarRegistro(id) },
+        alActualizar = {
+            viewModel.cargarRegistros()
+        },
+        alAnular = { id, motivo, contrasena, onResultado ->
+            viewModel.anularRegistro(
+                idRegistro = id,
+                motivo = motivo,
+                contrasena = contrasena,
+                onResultado = onResultado
+            )
+        },
         onAbrirMenu = onAbrirMenu
     )
 }
@@ -41,25 +52,37 @@ fun HistorialObservadorContent(
     registros: List<RegistroObservacion>,
     autorizado: Boolean,
     alActualizar: () -> Unit,
-    alEliminar: (Long) -> Boolean,
+    alAnular: (
+        Long,
+        String,
+        String,
+        (Boolean, String) -> Unit
+    ) -> Unit,
     onAbrirMenu: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val mensajeActualizado = stringResource(R.string.historial_actualizado)
-    val mensajeEliminado = stringResource(R.string.historial_eliminado)
+
+    val mensajeActualizado =
+        stringResource(R.string.historial_actualizado)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(stringResource(R.string.historial_observador_titulo))
+                    Text(
+                        stringResource(R.string.historial_observador_titulo)
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onAbrirMenu) {
                         Icon(
-                            painter = androidx.compose.ui.res.painterResource(cl.duoc.rinconsurapp.R.drawable.ic_menu),
-                            contentDescription = stringResource(R.string.dashboard_abrir_menu)
+                            painter = androidx.compose.ui.res.painterResource(
+                                R.drawable.ic_menu
+                            ),
+                            contentDescription = stringResource(
+                                R.string.dashboard_abrir_menu
+                            )
                         )
                     }
                 },
@@ -82,10 +105,15 @@ fun HistorialObservadorContent(
                 .padding(16.dp)
         ) {
             if (!autorizado) {
-                Text(stringResource(R.string.historial_observador_acceso))
+                Text(
+                    stringResource(R.string.historial_observador_acceso)
+                )
             } else {
+
                 if (registros.isEmpty()) {
-                    Text(stringResource(R.string.historial_observador_vacio))
+                    Text(
+                        stringResource(R.string.historial_observador_vacio)
+                    )
                 } else {
                     Text(
                         text = stringResource(
@@ -101,16 +129,28 @@ fun HistorialObservadorContent(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(registros, key = { it.id }) { registro ->
+                        items(
+                            items = registros,
+                            key = { it.id }
+                        ) { registro ->
+
                             TarjetaRegistroObservador(
                                 registro = registro,
-                                alEliminar = { id ->
-                                    if (alEliminar(id)) {
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                mensajeEliminado
-                                            )
-                                        }
+                                alAnular = {
+                                        motivo, contrasena, onResultado ->
+
+                                    alAnular(
+                                        registro.id,
+                                        motivo,
+                                        contrasena,
+                                        onResultado
+                                    )
+                                },
+                                onExito = { mensaje ->
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            mensaje
+                                        )
                                     }
                                 }
                             )
@@ -136,7 +176,9 @@ fun HistorialObservadorContent(
                         contentColor = Color.White
                     )
                 ) {
-                    Text(stringResource(R.string.historial_actualizar))
+                    Text(
+                        stringResource(R.string.historial_actualizar)
+                    )
                 }
             }
         }
@@ -146,11 +188,20 @@ fun HistorialObservadorContent(
 @Composable
 private fun TarjetaRegistroObservador(
     registro: RegistroObservacion,
-    alEliminar: (Long) -> Unit
+    alAnular: (
+        String,
+        String,
+        (Boolean, String) -> Unit
+    ) -> Unit,
+    onExito: (String) -> Unit
 ) {
-    var mostrarConfirmacion by remember { mutableStateOf(false) }
+    var mostrarConfirmacion by remember {
+        mutableStateOf(false)
+    }
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -200,39 +251,22 @@ private fun TarjetaRegistroObservador(
             Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedButton(
-                onClick = { mostrarConfirmacion = true }
+                onClick = {
+                    mostrarConfirmacion = true
+                }
             ) {
-                Text(stringResource(R.string.historial_eliminar))
+                Text("Anular observación")
             }
         }
     }
 
     if (mostrarConfirmacion) {
-        AlertDialog(
-            onDismissRequest = { mostrarConfirmacion = false },
-            title = {
-                Text(stringResource(R.string.historial_confirmar_titulo))
+        DialogoAnularObservacion(
+            onCerrar = {
+                mostrarConfirmacion = false
             },
-            text = {
-                Text(stringResource(R.string.historial_confirmar_mensaje))
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        mostrarConfirmacion = false
-                        alEliminar(registro.id)
-                    }
-                ) {
-                    Text(stringResource(R.string.historial_eliminar))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { mostrarConfirmacion = false }
-                ) {
-                    Text(stringResource(R.string.historial_cancelar))
-                }
-            }
+            onConfirmar = alAnular,
+            onExito = onExito
         )
     }
 }

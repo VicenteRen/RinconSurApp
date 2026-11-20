@@ -110,6 +110,10 @@ fun CrearContrasenaContent(
                 RequisitoTexto(texto = stringResource(R.string.req_longitud), cumplido = uiState.tieneLongitudValida)
                 RequisitoTexto(texto = stringResource(R.string.req_numero), cumplido = uiState.tieneNumero)
                 RequisitoTexto(texto = stringResource(R.string.req_mayuscula), cumplido = uiState.tieneMayuscula)
+                RequisitoTexto(
+                    texto = "Al menos un carácter especial",
+                    cumplido = uiState.tieneEspecial
+                )
             }
 
             if (uiState.errorGeneral != null) {
