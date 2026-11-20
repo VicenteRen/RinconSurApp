@@ -16,7 +16,7 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
 
     companion object {
         const val CONTRASENA_TEMPORAL = "Temp1234*"
-        private const val CARACTERES_ESPANOL = "ñÑáéíóúÁÉÍÓÚüÜ"
+        private val PATRON_CORREO = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$")
     }
 
     private val repositorio = UsuarioRepository()
@@ -35,8 +35,7 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun onNombreCambiado(nombre: String) {
-        val nombreFiltrado = nombre.filter { it.isLetter() || it.isWhitespace() || it in CARACTERES_ESPANOL }
-        val nombreFormateado = nombreFiltrado.split(" ").joinToString(" ") { palabra ->
+        val nombreFormateado = nombre.split(" ").joinToString(" ") { palabra ->
             if (palabra.isNotEmpty()) palabra.lowercase().replaceFirstChar { it.uppercase() } else ""
         }
         _uiState.update { it.copy(nombre = nombreFormateado) }
@@ -45,9 +44,9 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
 
     fun onCorreoCambiado(correo: String) {
         val correoMinuscula = correo.lowercase()
-        val patronCorreo = Regex("^[a-z0-9ñáéíóúü._%+-]+@[a-z0-9ñáéíóúü.-]+\\.[a-z]{2,6}$")
+        val correoLimpio = correoMinuscula.trim()
 
-        val error = if (correoMinuscula.isNotBlank() && !correoMinuscula.matches(patronCorreo)) {
+        val error = if (correoLimpio.isNotBlank() && !correoLimpio.matches(PATRON_CORREO)) {
             "Correo inválido"
         } else null
 
@@ -87,7 +86,7 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
         _uiState.update { estado ->
             val esValido = estado.nombre.isNotBlank() &&
                     estado.rutError == null && estado.rut.isNotBlank() &&
-                    estado.correoError == null && estado.correo.isNotBlank() &&
+                    estado.correoError == null && estado.correo.trim().isNotBlank() &&
                     estado.telefono.length == 9
 
             estado.copy(formularioValido = esValido)
@@ -104,7 +103,7 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
                     rut = estado.rut,
                     contrasena = CONTRASENA_TEMPORAL,
                     nombreCompleto = estado.nombre,
-                    correo = estado.correo,
+                    correo = estado.correo.trim(),
                     telefono = estado.telefono,
                     preguntaSeguridad = "Pregunta inicial",
                     respuestaSeguridad = "Respuesta inicial",

@@ -13,7 +13,6 @@ data class PrimerIngresoUiState(
     val tieneLongitudValida: Boolean = false,
     val tieneNumero: Boolean = false,
     val tieneMayuscula: Boolean = false,
-    val sinCaracteresEspeciales: Boolean = false,
     val contrasenaError: String? = null,
     val paso2Valido: Boolean = false,
 

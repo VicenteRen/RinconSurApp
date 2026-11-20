@@ -16,7 +16,7 @@ class GestionUsuariosViewModel : ViewModel() {
 
     companion object {
         private val ROLES_DISPONIBLES = listOf("Observador", "Administrador")
-        private val PATRON_CORREO = Regex("^[a-z0-9ñáéíóúü._%+-]+@[a-z0-9ñáéíóúü.-]+\\.[a-z]{2,6}$")
+        private val PATRON_CORREO = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$")
     }
 
     private val repositorio = UsuarioRepository()

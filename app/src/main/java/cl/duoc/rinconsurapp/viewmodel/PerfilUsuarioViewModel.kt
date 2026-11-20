@@ -17,6 +17,10 @@ import kotlinx.coroutines.launch
 
 class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(application) {
 
+    companion object {
+        private val PATRON_CORREO = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$")
+    }
+
     private val repositorio = UsuarioRepository()
     private val sesion = SesionPreferencias(application)
 
@@ -51,8 +55,7 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
                         cerrarSesionExitoso = false
                     )
                 }
-            } catch (e: Exception) {
-                // Manejo de error de red
+            } catch (_: Exception) {
             }
         }
     }
@@ -77,8 +80,7 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
                         informacionModificadaExitosamente = true
                     )
                 }
-            } catch (e: Exception) {
-                // Manejo de error al subir avatar
+            } catch (_: Exception) {
             }
         }
     }
@@ -102,7 +104,7 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
             val valido = nuevoTelefono.length == 9 &&
                     error == null &&
                     errorCorreoLimpio == null &&
-                    estado.correoContacto.isNotBlank()
+                    estado.correoContacto.trim().isNotBlank()
 
             estado.copy(
                 telefonoContacto = nuevoTelefono,
@@ -116,13 +118,12 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
 
     fun alCambiarCorreo(nuevoCorreo: String) {
         val correoMinuscula = nuevoCorreo.lowercase()
-        val formatoValido = correoMinuscula.matches(
-            Regex("^[a-z0-9ñáéíóúü._%+-]+@[a-z0-9ñáéíóúü.-]+\\.[a-z]{2,6}$")
-        )
+        val correoLimpio = correoMinuscula.trim()
+        val formatoValido = correoLimpio.matches(PATRON_CORREO)
 
-        val error = if (correoMinuscula.isNotBlank() && !formatoValido) {
+        val error = if (correoLimpio.isNotBlank() && !formatoValido) {
             "Formato de correo inválido"
-        } else if (correoMinuscula.isBlank()) {
+        } else if (correoLimpio.isBlank()) {
             "El correo es obligatorio"
         } else null
 

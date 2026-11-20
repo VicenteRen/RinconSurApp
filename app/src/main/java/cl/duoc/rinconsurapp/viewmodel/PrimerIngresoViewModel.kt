@@ -14,11 +14,6 @@ import kotlinx.coroutines.launch
 
 class PrimerIngresoViewModel(application: Application) : AndroidViewModel(application) {
 
-    companion object {
-        private const val CARACTERES_ESPANOL = "ñÑáéíóúÁÉÍÓÚüÜ"
-        private const val MAYUSCULAS_ESPANOL = "ÑÁÉÍÓÚÜ"
-    }
-
     private val repositorio = UsuarioRepository()
     private val sesion = SesionPreferencias(application)
 
@@ -51,7 +46,6 @@ class PrimerIngresoViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun onRespuestaCambiada(respuesta: String) {
-        if (!respuesta.all { it.isLetter() || it.isWhitespace() || it in CARACTERES_ESPANOL }) return
         val error = if (respuesta.isNotBlank() && respuesta.trim().length < 2) {
             "La respuesta es demasiado corta"
         } else null
@@ -79,9 +73,7 @@ class PrimerIngresoViewModel(application: Application) : AndroidViewModel(applic
                 contrasena = contrasena,
                 tieneLongitudValida = contrasena.length >= 8,
                 tieneNumero = contrasena.any { it.isDigit() },
-                tieneMayuscula = contrasena.any { it.isUpperCase() || it in MAYUSCULAS_ESPANOL },
-                sinCaracteresEspeciales = contrasena.isNotEmpty() &&
-                        contrasena.all { it.isLetterOrDigit() || it in CARACTERES_ESPANOL },
+                tieneMayuscula = contrasena.any { it.isUpperCase() },
                 contrasenaError = error,
                 errorGeneral = null
             )
@@ -114,7 +106,6 @@ class PrimerIngresoViewModel(application: Application) : AndroidViewModel(applic
             val valido = estado.tieneLongitudValida &&
                     estado.tieneNumero &&
                     estado.tieneMayuscula &&
-                    estado.sinCaracteresEspeciales &&
                     estado.contrasena.isNotBlank() &&
                     estado.contrasena == estado.confirmarContrasena
             estado.copy(paso2Valido = valido)
