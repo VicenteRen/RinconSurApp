@@ -2,16 +2,18 @@ package cl.duoc.rinconsurapp.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import cl.duoc.rinconsurapp.data.RinconSurDbHelper
+import androidx.lifecycle.viewModelScope
+import cl.duoc.rinconsurapp.data.UsuarioRepository
 import cl.duoc.rinconsurapp.model.RestablecerContrasenaUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class RestablecerContrasenaViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val db = RinconSurDbHelper(application)
+    private val repositorio = UsuarioRepository()
     private val _uiState = MutableStateFlow(RestablecerContrasenaUiState())
     val uiState: StateFlow<RestablecerContrasenaUiState> = _uiState.asStateFlow()
 
@@ -27,7 +29,7 @@ class RestablecerContrasenaViewModel(application: Application) : AndroidViewMode
             val esValido = error == null && nuevoRut.isNotBlank() &&
                     estado.respuestaSeguridad.isNotBlank() &&
                     estado.tieneLongitudValida && estado.tieneNumero &&
-                    estado.tieneMayuscula && estado.sinCaracteresEspeciales &&
+                    estado.tieneMayuscula &&
                     estado.nuevaContrasena == estado.confirmarContrasena
 
             estado.copy(
@@ -44,13 +46,11 @@ class RestablecerContrasenaViewModel(application: Application) : AndroidViewMode
     }
 
     fun onRespuestaCambiada(nuevaRespuesta: String) {
-        if (!nuevaRespuesta.all { it.isLetter() || it.isWhitespace() }) return
-
         _uiState.update { estado ->
             val esValido = estado.rutError == null && estado.rut.isNotBlank() &&
                     nuevaRespuesta.isNotBlank() &&
                     estado.tieneLongitudValida && estado.tieneNumero &&
-                    estado.tieneMayuscula && estado.sinCaracteresEspeciales &&
+                    estado.tieneMayuscula &&
                     estado.nuevaContrasena == estado.confirmarContrasena
 
             estado.copy(
@@ -67,7 +67,6 @@ class RestablecerContrasenaViewModel(application: Application) : AndroidViewMode
             val longitudValida = contrasena.length >= 8
             val tieneNum = contrasena.any { it.isDigit() }
             val tieneMayusc = contrasena.any { it.isUpperCase() }
-            val sinEspeciales = contrasena.isNotEmpty() && contrasena.all { it.isLetterOrDigit() }
 
             val contrasenasCoinciden = contrasena == estado.confirmarContrasena
             val error = if (estado.confirmarContrasena.isNotBlank() && !contrasenasCoinciden) {
@@ -76,7 +75,7 @@ class RestablecerContrasenaViewModel(application: Application) : AndroidViewMode
 
             val esValido = estado.rutError == null && estado.rut.isNotBlank() &&
                     estado.respuestaSeguridad.isNotBlank() &&
-                    longitudValida && tieneNum && tieneMayusc && sinEspeciales &&
+                    longitudValida && tieneNum && tieneMayusc &&
                     contrasenasCoinciden
 
             estado.copy(
@@ -84,7 +83,6 @@ class RestablecerContrasenaViewModel(application: Application) : AndroidViewMode
                 tieneLongitudValida = longitudValida,
                 tieneNumero = tieneNum,
                 tieneMayuscula = tieneMayusc,
-                sinCaracteresEspeciales = sinEspeciales,
                 contrasenaError = error,
                 errorGeneral = null,
                 formularioValido = esValido
@@ -102,7 +100,7 @@ class RestablecerContrasenaViewModel(application: Application) : AndroidViewMode
             val esValido = estado.rutError == null && estado.rut.isNotBlank() &&
                     estado.respuestaSeguridad.isNotBlank() &&
                     estado.tieneLongitudValida && estado.tieneNumero &&
-                    estado.tieneMayuscula && estado.sinCaracteresEspeciales &&
+                    estado.tieneMayuscula &&
                     contrasenasCoinciden
 
             estado.copy(
@@ -120,28 +118,36 @@ class RestablecerContrasenaViewModel(application: Application) : AndroidViewMode
 
     fun intentarRestablecerContrasena() {
         val estado = _uiState.value
-
-        val exito = db.cambiarContrasena(
-            rut = estado.rut.trim(),
-            preguntaSeguridad = estado.preguntaSeleccionada,
-            respuestaSeguridad = estado.respuestaSeguridad.trim(),
-            nuevaContrasena = estado.nuevaContrasena
-        )
-
-        if (exito) {
-            _uiState.update { it.copy(restablecimientoExitoso = true, errorGeneral = null) }
-        } else {
-            _uiState.update {
-                it.copy(
-                    restablecimientoExitoso = false,
-                    errorGeneral = "Los datos de seguridad no coinciden con ningún usuario."
+        viewModelScope.launch {
+            try {
+                repositorio.verificarIdentidad(
+                    rut = estado.rut.trim(),
+                    preguntaSeguridad = estado.preguntaSeleccionada,
+                    respuestaSeguridad = estado.respuestaSeguridad.trim()
                 )
+                repositorio.recuperarContrasena(
+                    rut = estado.rut.trim(),
+                    nuevaContrasena = estado.nuevaContrasena
+                )
+                _uiState.update { it.copy(restablecimientoExitoso = true, errorGeneral = null) }
+            } catch (e: Exception) {
+                val mensaje = if (e.message?.startsWith("Error de red") == true) {
+                    e.message
+                } else {
+                    "Los datos de seguridad no coinciden con ningún usuario."
+                }
+                _uiState.update {
+                    it.copy(
+                        restablecimientoExitoso = false,
+                        errorGeneral = mensaje
+                    )
+                }
             }
         }
     }
 
     fun onDialogoExitoCerrado() {
-        _uiState.update { it.copy(restablecimientoExitoso = false) }
+        _uiState.update { RestablecerContrasenaUiState() }
     }
 
     private fun validarRutModulo11(rutCompleto: String): Boolean {
@@ -168,10 +174,5 @@ class RestablecerContrasenaViewModel(application: Application) : AndroidViewMode
         }
 
         return dvIngresado == dvEsperado
-    }
-
-    override fun onCleared() {
-        db.close()
-        super.onCleared()
     }
 }

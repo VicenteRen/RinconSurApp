@@ -211,7 +211,6 @@ fun RestablecerContrasenaContent(
                 RequisitoTexto(texto = stringResource(R.string.req_longitud), cumplido = uiState.tieneLongitudValida)
                 RequisitoTexto(texto = stringResource(R.string.req_numero), cumplido = uiState.tieneNumero)
                 RequisitoTexto(texto = stringResource(R.string.req_mayuscula), cumplido = uiState.tieneMayuscula)
-                RequisitoTexto(texto = stringResource(R.string.req_sin_especiales), cumplido = uiState.sinCaracteresEspeciales)
             }
 
             if (uiState.errorGeneral != null) {
