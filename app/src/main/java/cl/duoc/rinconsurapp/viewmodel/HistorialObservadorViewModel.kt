@@ -66,4 +66,62 @@ class HistorialObservadorViewModel(application: Application) :
             }
         }
     }
+
+
+    fun anularRegistro(
+        idRegistro: Long,
+        motivo: String,
+        contrasena: String,
+        onResultado: (Boolean, String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val idUsuario = sesion.leer()
+
+                if (idUsuario == SesionPreferencias.SIN_SESION) {
+                    onResultado(false, "Debes iniciar sesión.")
+                    return@launch
+                }
+
+                val usuario = usuarios.buscarPorId(idUsuario)
+
+                if (usuario.rolId != Rol.ID_OBSERVADOR || !usuario.activo) {
+                    onResultado(false, "No tienes permisos para anular.")
+                    return@launch
+                }
+
+                val registro = _registros.value.firstOrNull {
+                    it.id == idRegistro
+                }
+
+                if (registro == null || registro.usuarioId != idUsuario) {
+                    onResultado(
+                        false,
+                        "Solo puedes anular tus propias observaciones."
+                    )
+                    return@launch
+                }
+
+                repositorio.anularObservacion(
+                    id = idRegistro,
+                    rut = usuario.rut,
+                    contrasena = contrasena,
+                    motivo = motivo
+                )
+
+                _registros.value = repositorio.listarPorUsuario(idUsuario)
+
+                onResultado(true, "Observación anulada correctamente.")
+
+            } catch (e: Exception) {
+                Log.e("HistorialObservador", "Error al anular", e)
+
+                onResultado(
+                    false,
+                    e.message ?: "No se pudo anular la observación."
+                )
+            }
+        }
+    }
+
 }

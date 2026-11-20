@@ -1,48 +1,51 @@
+
 package cl.duoc.rinconsurapp.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cl.duoc.rinconsurapp.model.RegistroObservacion
-import cl.duoc.rinconsurapp.viewmodel.HistorialAdminViewModel
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.graphics.Color
-import cl.duoc.rinconsurapp.ui.theme.Primario
-import kotlinx.coroutines.launch
-import androidx.compose.material3.ButtonDefaults
-import cl.duoc.rinconsurapp.ui.theme.PrimarioOscuro
-import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.rinconsurapp.R
+import cl.duoc.rinconsurapp.model.RegistroObservacion
+import cl.duoc.rinconsurapp.ui.components.DialogoAnularObservacion
+import cl.duoc.rinconsurapp.ui.theme.Primario
+import cl.duoc.rinconsurapp.ui.theme.PrimarioOscuro
+import cl.duoc.rinconsurapp.viewmodel.HistorialAdminViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun HistorialAdminScreen(
     onAbrirMenu: () -> Unit = {},
-    viewModel: HistorialAdminViewModel =
-        androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: HistorialAdminViewModel = viewModel()
 ) {
     val registros by viewModel.registros.collectAsStateWithLifecycle()
     val autorizado by viewModel.autorizado.collectAsStateWithLifecycle()
 
-
     HistorialAdminContent(
         registros = registros,
         autorizado = autorizado,
-        alActualizar = { viewModel.cargarRegistros() },
-        alEliminar = { id, onResultado -> viewModel.eliminarRegistro(id, onResultado)},
+        alActualizar = {
+            viewModel.cargarRegistros()
+        },
+        alAnular = { id, motivo, contrasena, onResultado ->
+            viewModel.anularRegistro(
+                idRegistro = id,
+                motivo = motivo,
+                contrasena = contrasena,
+                onResultado = onResultado
+            )
+        },
         onAbrirMenu = onAbrirMenu
     )
-
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,24 +53,35 @@ fun HistorialAdminContent(
     registros: List<RegistroObservacion>,
     autorizado: Boolean,
     alActualizar: () -> Unit,
-    alEliminar: (Long, (Boolean) -> Unit) -> Unit,
+    alAnular: (
+        Long,
+        String,
+        String,
+        (Boolean, String) -> Unit
+    ) -> Unit,
     onAbrirMenu: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val mensajeActualizado = stringResource(R.string.historial_actualizado)
-    val mensajeEliminado = stringResource(R.string.historial_eliminado)
+
+    val mensajeActualizado =
+        stringResource(R.string.historial_actualizado)
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(stringResource(R.string.historial_admin_titulo))
+                    Text(
+                        stringResource(R.string.historial_admin_titulo)
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onAbrirMenu) {
                         Icon(
-                            painter = androidx.compose.ui.res.painterResource(cl.duoc.rinconsurapp.R.drawable.ic_menu),
-                            contentDescription = stringResource(R.string.dashboard_abrir_menu)
+                            painter = painterResource(R.drawable.ic_menu),
+                            contentDescription = stringResource(
+                                R.string.dashboard_abrir_menu
+                            )
                         )
                     }
                 },
@@ -89,12 +103,16 @@ fun HistorialAdminContent(
                 .padding(padding)
                 .padding(16.dp)
         ) {
-
             if (!autorizado) {
-                Text(stringResource(R.string.historial_admin_acceso))
+                Text(
+                    stringResource(R.string.historial_admin_acceso)
+                )
             } else {
+
                 if (registros.isEmpty()) {
-                    Text(stringResource(R.string.historial_sin_registros))
+                    Text(
+                        stringResource(R.string.historial_sin_registros)
+                    )
                 } else {
                     Text(
                         text = stringResource(
@@ -110,23 +128,32 @@ fun HistorialAdminContent(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        items(
+                            items = registros,
+                            key = { it.id }
+                        ) { registro ->
 
-                        items(registros) { registro ->
                             TarjetaRegistroAdmin(
                                 registro = registro,
-                                alEliminar = { id ->
-                                    alEliminar(id) { eliminado ->
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                if (eliminado) mensajeEliminado
-                                                else "No se pudo deshabilitar el registro"
-                                            )
-                                        }
+                                alAnular = {
+                                        motivo, contrasena, onResultado ->
+
+                                    alAnular(
+                                        registro.id,
+                                        motivo,
+                                        contrasena,
+                                        onResultado
+                                    )
+                                },
+                                onExito = { mensaje ->
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            mensaje
+                                        )
                                     }
                                 }
                             )
                         }
-
                     }
                 }
 
@@ -148,21 +175,28 @@ fun HistorialAdminContent(
                         contentColor = Color.White
                     )
                 ) {
-                    Text(stringResource(R.string.historial_actualizar))
+                    Text(
+                        stringResource(R.string.historial_actualizar)
+                    )
                 }
             }
         }
     }
 }
 
-
-
 @Composable
 private fun TarjetaRegistroAdmin(
     registro: RegistroObservacion,
-    alEliminar: (Long) -> Unit
+    alAnular: (
+        String,
+        String,
+        (Boolean, String) -> Unit
+    ) -> Unit,
+    onExito: (String) -> Unit
 ) {
-    var mostrarConfirmacion by remember { mutableStateOf(false) }
+    var mostrarConfirmacion by remember {
+        mutableStateOf(false)
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -216,39 +250,22 @@ private fun TarjetaRegistroAdmin(
             Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedButton(
-                onClick = { mostrarConfirmacion = true }
+                onClick = {
+                    mostrarConfirmacion = true
+                }
             ) {
-                Text(stringResource(R.string.historial_eliminar))
+                Text("Anular observación")
             }
         }
     }
 
     if (mostrarConfirmacion) {
-        AlertDialog(
-            onDismissRequest = { mostrarConfirmacion = false },
-            title = {
-                Text(stringResource(R.string.historial_confirmar_titulo))
+        DialogoAnularObservacion(
+            onCerrar = {
+                mostrarConfirmacion = false
             },
-            text = {
-                Text(stringResource(R.string.historial_confirmar_mensaje))
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        mostrarConfirmacion = false
-                        alEliminar(registro.id)
-                    }
-                ) {
-                    Text(stringResource(R.string.historial_eliminar))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { mostrarConfirmacion = false }
-                ) {
-                    Text(stringResource(R.string.historial_cancelar))
-                }
-            }
+            onConfirmar = alAnular,
+            onExito = onExito
         )
     }
 }

@@ -63,28 +63,49 @@ class HistorialAdminViewModel(application: Application) :
         }
     }
 
-    fun eliminarRegistro(
+
+    fun anularRegistro(
         idRegistro: Long,
-        onResultado: (Boolean) -> Unit
+        motivo: String,
+        contrasena: String,
+        onResultado: (Boolean, String) -> Unit
     ) {
         viewModelScope.launch {
             try {
                 val idUsuario = sesion.leer()
-                val usuario = usuarioRepositorio.buscarPorId(idUsuario)
 
-                if (usuario.rolId != Rol.ID_ADMIN || !usuario.activo) {
-                    onResultado(false)
+                if (idUsuario == SesionPreferencias.SIN_SESION) {
+                    onResultado(false, "Debes iniciar sesión.")
                     return@launch
                 }
 
-                repositorio.eliminarObservacion(idRegistro)
-                cargarRegistros()
-                onResultado(true)
+                val usuario = usuarioRepositorio.buscarPorId(idUsuario)
+
+                if (usuario.rolId != Rol.ID_ADMIN || !usuario.activo) {
+                    onResultado(false, "No tienes permisos para anular.")
+                    return@launch
+                }
+
+                repositorio.anularObservacion(
+                    id = idRegistro,
+                    rut = usuario.rut,
+                    contrasena = contrasena,
+                    motivo = motivo
+                )
+
+                _registros.value = repositorio.listarTodas()
+
+                onResultado(true, "Observación anulada correctamente.")
 
             } catch (e: Exception) {
-                Log.e("HistorialAdmin", "Error al deshabilitar registro", e)
-                onResultado(false)
+                Log.e("HistorialAdmin", "Error al anular", e)
+
+                onResultado(
+                    false,
+                    e.message ?: "No se pudo anular la observación."
+                )
             }
         }
     }
+
 }

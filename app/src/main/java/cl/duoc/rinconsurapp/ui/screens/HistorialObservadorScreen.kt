@@ -8,12 +8,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.rinconsurapp.R
 import cl.duoc.rinconsurapp.model.RegistroObservacion
+import cl.duoc.rinconsurapp.ui.components.DialogoAnularObservacion
 import cl.duoc.rinconsurapp.ui.theme.Primario
 import cl.duoc.rinconsurapp.ui.theme.PrimarioOscuro
 import cl.duoc.rinconsurapp.viewmodel.HistorialObservadorViewModel
@@ -30,7 +31,17 @@ fun HistorialObservadorScreen(
     HistorialObservadorContent(
         registros = registros,
         autorizado = autorizado,
-        alActualizar = { viewModel.cargarRegistros() },
+        alActualizar = {
+            viewModel.cargarRegistros()
+        },
+        alAnular = { id, motivo, contrasena, onResultado ->
+            viewModel.anularRegistro(
+                idRegistro = id,
+                motivo = motivo,
+                contrasena = contrasena,
+                onResultado = onResultado
+            )
+        },
         onAbrirMenu = onAbrirMenu
     )
 }
@@ -41,17 +52,27 @@ fun HistorialObservadorContent(
     registros: List<RegistroObservacion>,
     autorizado: Boolean,
     alActualizar: () -> Unit,
+    alAnular: (
+        Long,
+        String,
+        String,
+        (Boolean, String) -> Unit
+    ) -> Unit,
     onAbrirMenu: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val mensajeActualizado = stringResource(R.string.historial_actualizado)
+
+    val mensajeActualizado =
+        stringResource(R.string.historial_actualizado)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(stringResource(R.string.historial_observador_titulo))
+                    Text(
+                        stringResource(R.string.historial_observador_titulo)
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onAbrirMenu) {
@@ -84,10 +105,15 @@ fun HistorialObservadorContent(
                 .padding(16.dp)
         ) {
             if (!autorizado) {
-                Text(stringResource(R.string.historial_observador_acceso))
+                Text(
+                    stringResource(R.string.historial_observador_acceso)
+                )
             } else {
+
                 if (registros.isEmpty()) {
-                    Text(stringResource(R.string.historial_observador_vacio))
+                    Text(
+                        stringResource(R.string.historial_observador_vacio)
+                    )
                 } else {
                     Text(
                         text = stringResource(
@@ -103,8 +129,31 @@ fun HistorialObservadorContent(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(registros, key = { it.id }) { registro ->
-                            TarjetaRegistroObservador(registro)
+                        items(
+                            items = registros,
+                            key = { it.id }
+                        ) { registro ->
+
+                            TarjetaRegistroObservador(
+                                registro = registro,
+                                alAnular = {
+                                        motivo, contrasena, onResultado ->
+
+                                    alAnular(
+                                        registro.id,
+                                        motivo,
+                                        contrasena,
+                                        onResultado
+                                    )
+                                },
+                                onExito = { mensaje ->
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            mensaje
+                                        )
+                                    }
+                                }
+                            )
                         }
                     }
                 }
@@ -127,7 +176,9 @@ fun HistorialObservadorContent(
                         contentColor = Color.White
                     )
                 ) {
-                    Text(stringResource(R.string.historial_actualizar))
+                    Text(
+                        stringResource(R.string.historial_actualizar)
+                    )
                 }
             }
         }
@@ -136,9 +187,21 @@ fun HistorialObservadorContent(
 
 @Composable
 private fun TarjetaRegistroObservador(
-    registro: RegistroObservacion
+    registro: RegistroObservacion,
+    alAnular: (
+        String,
+        String,
+        (Boolean, String) -> Unit
+    ) -> Unit,
+    onExito: (String) -> Unit
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    var mostrarConfirmacion by remember {
+        mutableStateOf(false)
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -184,6 +247,26 @@ private fun TarjetaRegistroObservador(
                     registro.nombreObservador
                 )
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedButton(
+                onClick = {
+                    mostrarConfirmacion = true
+                }
+            ) {
+                Text("Anular observación")
+            }
         }
+    }
+
+    if (mostrarConfirmacion) {
+        DialogoAnularObservacion(
+            onCerrar = {
+                mostrarConfirmacion = false
+            },
+            onConfirmar = alAnular,
+            onExito = onExito
+        )
     }
 }
