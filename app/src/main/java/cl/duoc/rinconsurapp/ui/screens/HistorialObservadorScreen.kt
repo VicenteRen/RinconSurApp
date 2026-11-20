@@ -1,3 +1,4 @@
+
 package cl.duoc.rinconsurapp.ui.screens
 
 import androidx.compose.foundation.layout.*
@@ -8,15 +9,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cl.duoc.rinconsurapp.R
 import cl.duoc.rinconsurapp.model.RegistroObservacion
 import cl.duoc.rinconsurapp.ui.theme.Primario
+import cl.duoc.rinconsurapp.ui.theme.PrimarioOscuro
 import cl.duoc.rinconsurapp.viewmodel.HistorialObservadorViewModel
 import kotlinx.coroutines.launch
-import cl.duoc.rinconsurapp.ui.theme.PrimarioOscuro
-import androidx.compose.ui.res.stringResource
-import cl.duoc.rinconsurapp.R
 
 @Composable
 fun HistorialObservadorScreen(
@@ -30,7 +31,6 @@ fun HistorialObservadorScreen(
         registros = registros,
         autorizado = autorizado,
         alActualizar = { viewModel.cargarRegistros() },
-        alEliminar = { id -> viewModel.eliminarRegistro(id) },
         onAbrirMenu = onAbrirMenu
     )
 }
@@ -41,13 +41,11 @@ fun HistorialObservadorContent(
     registros: List<RegistroObservacion>,
     autorizado: Boolean,
     alActualizar: () -> Unit,
-    alEliminar: (Long) -> Boolean,
     onAbrirMenu: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val mensajeActualizado = stringResource(R.string.historial_actualizado)
-    val mensajeEliminado = stringResource(R.string.historial_eliminado)
 
     Scaffold(
         topBar = {
@@ -58,8 +56,12 @@ fun HistorialObservadorContent(
                 navigationIcon = {
                     IconButton(onClick = onAbrirMenu) {
                         Icon(
-                            painter = androidx.compose.ui.res.painterResource(cl.duoc.rinconsurapp.R.drawable.ic_menu),
-                            contentDescription = stringResource(R.string.dashboard_abrir_menu)
+                            painter = androidx.compose.ui.res.painterResource(
+                                R.drawable.ic_menu
+                            ),
+                            contentDescription = stringResource(
+                                R.string.dashboard_abrir_menu
+                            )
                         )
                     }
                 },
@@ -102,18 +104,7 @@ fun HistorialObservadorContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(registros, key = { it.id }) { registro ->
-                            TarjetaRegistroObservador(
-                                registro = registro,
-                                alEliminar = { id ->
-                                    if (alEliminar(id)) {
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                mensajeEliminado
-                                            )
-                                        }
-                                    }
-                                }
-                            )
+                            TarjetaRegistroObservador(registro)
                         }
                     }
                 }
@@ -145,11 +136,8 @@ fun HistorialObservadorContent(
 
 @Composable
 private fun TarjetaRegistroObservador(
-    registro: RegistroObservacion,
-    alEliminar: (Long) -> Unit
+    registro: RegistroObservacion
 ) {
-    var mostrarConfirmacion by remember { mutableStateOf(false) }
-
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -196,43 +184,6 @@ private fun TarjetaRegistroObservador(
                     registro.nombreObservador
                 )
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedButton(
-                onClick = { mostrarConfirmacion = true }
-            ) {
-                Text(stringResource(R.string.historial_eliminar))
-            }
         }
-    }
-
-    if (mostrarConfirmacion) {
-        AlertDialog(
-            onDismissRequest = { mostrarConfirmacion = false },
-            title = {
-                Text(stringResource(R.string.historial_confirmar_titulo))
-            },
-            text = {
-                Text(stringResource(R.string.historial_confirmar_mensaje))
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        mostrarConfirmacion = false
-                        alEliminar(registro.id)
-                    }
-                ) {
-                    Text(stringResource(R.string.historial_eliminar))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { mostrarConfirmacion = false }
-                ) {
-                    Text(stringResource(R.string.historial_cancelar))
-                }
-            }
-        )
     }
 }

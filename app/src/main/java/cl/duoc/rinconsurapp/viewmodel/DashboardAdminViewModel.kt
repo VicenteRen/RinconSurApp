@@ -1,9 +1,13 @@
+
 package cl.duoc.rinconsurapp.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
-import cl.duoc.rinconsurapp.data.RinconSurDbHelper
+import androidx.lifecycle.viewModelScope
+import cl.duoc.rinconsurapp.data.ObservacionRepository
 import cl.duoc.rinconsurapp.data.SesionPreferencias
+import cl.duoc.rinconsurapp.data.UsuarioRepository
 import cl.duoc.rinconsurapp.model.Clasificacion
 import cl.duoc.rinconsurapp.model.DashboardAdminUiState
 import cl.duoc.rinconsurapp.model.RangoEtario
@@ -11,13 +15,14 @@ import cl.duoc.rinconsurapp.model.Rol
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class DashboardAdminViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
-    private val db = RinconSurDbHelper(application)
+    private val observaciones = ObservacionRepository()
+    private val usuarios = UsuarioRepository()
     private val sesion = SesionPreferencias(application)
 
     private val _uiState = MutableStateFlow(DashboardAdminUiState())
@@ -29,56 +34,67 @@ class DashboardAdminViewModel(
     }
 
     fun cargarEstadisticas() {
-        val usuario = db.buscarUsuarioPorId(sesion.leer())
+        viewModelScope.launch {
+            try {
+                val idUsuario = sesion.leer()
 
-        if (usuario?.rolId != Rol.ID_ADMIN) {
-            _uiState.value = DashboardAdminUiState()
-            return
-        }
+                if (idUsuario == SesionPreferencias.SIN_SESION) {
+                    _uiState.value = DashboardAdminUiState()
+                    return@launch
+                }
 
-        val registros = db.listarTodosLosRegistros()
+                val usuario = usuarios.buscarPorId(idUsuario)
 
-        val transito = registros.count {
-            it.clasificacion == Clasificacion.TRANSITO.etiqueta
-        }
+                if (usuario.rolId != Rol.ID_ADMIN || !usuario.activo) {
+                    _uiState.value = DashboardAdminUiState()
+                    return@launch
+                }
 
-        val visitas = registros.count {
-            it.clasificacion == Clasificacion.VISITA.etiqueta
-        }
+                val registros = observaciones.listarTodas()
 
-        val noDeterminado = registros.count {
-            it.clasificacion == Clasificacion.NO_DETERMINADO.etiqueta
-        }
+                val transito = registros.count {
+                    it.clasificacion == Clasificacion.TRANSITO.etiqueta
+                }
 
-        val total = transito + visitas + noDeterminado
+                val visitas = registros.count {
+                    it.clasificacion == Clasificacion.VISITA.etiqueta
+                }
 
-        val porcentaje = if (total > 0) {
-            transito.toFloat() / total * 100f
-        } else {
-            null
-        }
+                val noDeterminado = registros.count {
+                    it.clasificacion == Clasificacion.NO_DETERMINADO.etiqueta
+                }
 
-        val porEdad = RangoEtario.entries.associate { rango ->
-            rango.etiqueta to registros.count {
-                it.rangoEtario == rango.etiqueta
+                val total = transito + visitas + noDeterminado
+
+                val porcentajeTransito = if (total > 0) {
+                    transito.toFloat() / total * 100f
+                } else {
+                    null
+                }
+
+                val registrosPorEdad = RangoEtario.entries.associate { rango ->
+                    rango.etiqueta to registros.count {
+                        it.rangoEtario == rango.etiqueta
+                    }
+                }
+
+                _uiState.value = DashboardAdminUiState(
+                    autorizado = true,
+                    totalRegistros = registros.size,
+                    totalTransito = transito,
+                    totalVisitas = visitas,
+                    totalNoDeterminado = noDeterminado,
+                    porcentajeTransito = porcentajeTransito,
+                    registrosPorEdad = registrosPorEdad
+                )
+
+            } catch (e: Exception) {
+                Log.e(
+                    "DashboardAdmin",
+                    "Error al consultar los microservicios",
+                    e
+                )
             }
         }
-
-        _uiState.update {
-            it.copy(
-                autorizado = true,
-                totalRegistros = registros.size,
-                totalTransito = transito,
-                totalVisitas = visitas,
-                totalNoDeterminado = noDeterminado,
-                porcentajeTransito = porcentaje,
-                registrosPorEdad = porEdad
-            )
-        }
-    }
-
-    override fun onCleared() {
-        db.close()
-        super.onCleared()
     }
 }

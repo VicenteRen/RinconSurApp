@@ -37,7 +37,7 @@ fun HistorialAdminScreen(
         registros = registros,
         autorizado = autorizado,
         alActualizar = { viewModel.cargarRegistros() },
-        alEliminar = { id -> viewModel.eliminarRegistro(id) },
+        alEliminar = { id, onResultado -> viewModel.eliminarRegistro(id, onResultado)},
         onAbrirMenu = onAbrirMenu
     )
 
@@ -50,7 +50,7 @@ fun HistorialAdminContent(
     registros: List<RegistroObservacion>,
     autorizado: Boolean,
     alActualizar: () -> Unit,
-    alEliminar: (Long) -> Boolean,
+    alEliminar: (Long, (Boolean) -> Unit) -> Unit,
     onAbrirMenu: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -89,6 +89,7 @@ fun HistorialAdminContent(
                 .padding(padding)
                 .padding(16.dp)
         ) {
+
             if (!autorizado) {
                 Text(stringResource(R.string.historial_admin_acceso))
             } else {
@@ -114,12 +115,11 @@ fun HistorialAdminContent(
                             TarjetaRegistroAdmin(
                                 registro = registro,
                                 alEliminar = { id ->
-                                    val eliminado = alEliminar(id)
-
-                                    if (eliminado) {
+                                    alEliminar(id) { eliminado ->
                                         scope.launch {
                                             snackbarHostState.showSnackbar(
-                                                mensajeEliminado
+                                                if (eliminado) mensajeEliminado
+                                                else "No se pudo deshabilitar el registro"
                                             )
                                         }
                                     }
