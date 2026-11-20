@@ -74,6 +74,9 @@ class PrimerIngresoViewModel(application: Application) : AndroidViewModel(applic
                 tieneLongitudValida = contrasena.length >= 8,
                 tieneNumero = contrasena.any { it.isDigit() },
                 tieneMayuscula = contrasena.any { it.isUpperCase() },
+                tieneEspecial = contrasena.any {
+                    !it.isLetterOrDigit() && !it.isWhitespace()
+                },
                 contrasenaError = error,
                 errorGeneral = null
             )
@@ -106,6 +109,7 @@ class PrimerIngresoViewModel(application: Application) : AndroidViewModel(applic
             val valido = estado.tieneLongitudValida &&
                     estado.tieneNumero &&
                     estado.tieneMayuscula &&
+                    estado.tieneEspecial &&
                     estado.contrasena.isNotBlank() &&
                     estado.contrasena == estado.confirmarContrasena
             estado.copy(paso2Valido = valido)

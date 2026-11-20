@@ -52,14 +52,15 @@ import cl.duoc.rinconsurapp.permisos.Permisos
 import cl.duoc.rinconsurapp.ui.components.AvatarCircular
 import cl.duoc.rinconsurapp.ui.components.BotonPrincipal
 import cl.duoc.rinconsurapp.ui.components.CampoTexto
+import cl.duoc.rinconsurapp.ui.components.DialogoCambiarContrasena
 import cl.duoc.rinconsurapp.ui.components.ImagenEncabezado
 import cl.duoc.rinconsurapp.ui.components.TarjetaSeccion
 import cl.duoc.rinconsurapp.ui.theme.Dimens
-import cl.duoc.rinconsurapp.ui.theme.Exito
 import cl.duoc.rinconsurapp.ui.theme.Primario
 import cl.duoc.rinconsurapp.ui.theme.RinconSurAppTheme
 import cl.duoc.rinconsurapp.viewmodel.PerfilUsuarioViewModel
 import kotlinx.coroutines.launch
+
 
 @Composable
 fun PerfilUsuarioScreen(
@@ -75,17 +76,23 @@ fun PerfilUsuarioScreen(
     val textoCamaraDenegada = stringResource(R.string.permiso_camara_denegado)
     val textoGaleriaDenegada = stringResource(R.string.permiso_galeria_denegado)
     val textoAjustes = stringResource(R.string.btn_ajustes)
-    val textoExito = stringResource(R.string.msg_actualizacion_exitosa)
+
 
     // Lanzador para mostrar el Snackbar flotante al actualizar con éxito
-    LaunchedEffect(uiState.informacionModificadaExitosamente) {
-        if (uiState.informacionModificadaExitosamente) {
+
+    LaunchedEffect(uiState.mensajeActualizacion) {
+        val mensaje = uiState.mensajeActualizacion
+
+        if (mensaje != null) {
             snackbarHostState.showSnackbar(
-                message = textoExito,
-                duration = SnackbarDuration.Short
+                message = mensaje,
+                duration = SnackbarDuration.Long
             )
+
+            viewModel.limpiarMensajeActualizacion()
         }
     }
+
 
     fun avisarPermisoDenegado(mensaje: String) {
         scope.launch {
@@ -158,6 +165,14 @@ fun PerfilUsuarioScreen(
         },
         alCambiarTelefono = { viewModel.alCambiarTelefono(it) },
         alCambiarCorreo = { viewModel.alCambiarCorreo(it) },
+        alCambiarNombre = { viewModel.alCambiarNombre(it) },
+        alCambiarContrasena = { actual, nueva, onResultado ->
+            viewModel.cambiarContrasena(
+                actual = actual,
+                nueva = nueva,
+                onResultado = onResultado
+            )
+        },
         alGuardar = {
             Vibracion.vibrar(context)
             viewModel.guardarCambios()
@@ -180,11 +195,20 @@ fun PerfilUsuarioContent(
     onAbrirGaleria: () -> Unit = {},
     alCambiarTelefono: (String) -> Unit,
     alCambiarCorreo: (String) -> Unit,
+    alCambiarNombre: (String) -> Unit = {},
+    alCambiarContrasena: (
+        String,
+        String,
+        (Boolean, String) -> Unit
+    ) -> Unit = { _, _, _ -> },
     alGuardar: () -> Unit,
     alCerrarSesion: () -> Unit,
     onAbrirMenu: () -> Unit
 ) {
     var mostrarDialogoCerrar by remember { mutableStateOf(false) }
+    var mostrarDialogoContrasena by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -257,6 +281,18 @@ fun PerfilUsuarioContent(
                 TarjetaSeccion(titulo = stringResource(id = R.string.titulo_info_contacto)) {
                     Spacer(modifier = Modifier.height(16.dp))
 
+
+                    CampoTexto(
+                        valor = uiState.nombreCompleto,
+                        onValorCambia = alCambiarNombre,
+                        etiqueta = "Nombre completo",
+                        icono = R.drawable.ic_persona,
+                        error = uiState.errorNombre
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+
                     CampoTexto(
                         valor = uiState.correoContacto,
                         onValorCambia = alCambiarCorreo,
@@ -284,17 +320,18 @@ fun PerfilUsuarioContent(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    if (uiState.informacionModificadaExitosamente) {
-                        Text(
-                            text = stringResource(id = R.string.msg_actualizacion_exitosa),
-                            color = Exito,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier
-                                .padding(top = 16.dp, bottom = 8.dp)
-                                .align(Alignment.CenterHorizontally)
-                        )
-                    }
                 }
+
+
+                OutlinedButton(
+                    onClick = {
+                        mostrarDialogoContrasena = true
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Cambiar contraseña")
+                }
+
 
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -317,6 +354,24 @@ fun PerfilUsuarioContent(
                 }
             }
         }
+
+        if (mostrarDialogoContrasena) {
+            DialogoCambiarContrasena(
+                onCerrar = {
+                    mostrarDialogoContrasena = false
+                },
+                onConfirmar = alCambiarContrasena,
+                onExito = { mensaje ->
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = mensaje,
+                            duration = SnackbarDuration.Long
+                        )
+                    }
+                }
+            )
+        }
+
 
         if (mostrarDialogoCerrar) {
             AlertDialog(
@@ -362,6 +417,7 @@ fun PerfilUsuarioPreview() {
             uiState = PerfilUsuarioUiState(),
             alCambiarTelefono = {},
             alCambiarCorreo = {},
+
             alGuardar = {},
             alCerrarSesion = {},
             onAbrirMenu = {}

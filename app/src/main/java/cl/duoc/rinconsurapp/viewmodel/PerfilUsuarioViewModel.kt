@@ -24,6 +24,7 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
     private val repositorio = UsuarioRepository()
     private val sesion = SesionPreferencias(application)
 
+    private var perfilGuardado: Triple<String, String, String>? = null
     private val _uiState = MutableStateFlow(PerfilUsuarioUiState())
     val uiState: StateFlow<PerfilUsuarioUiState> = _uiState.asStateFlow()
 
@@ -40,6 +41,13 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
         viewModelScope.launch {
             try {
                 val usuario = repositorio.buscarPorId(obtenerIdActivo())
+
+                perfilGuardado = Triple(
+                    usuario.nombreCompleto,
+                    usuario.correo,
+                    usuario.telefono
+                )
+
                 _uiState.update {
                     it.copy(
                         nombreCompleto = usuario.nombreCompleto,
@@ -77,13 +85,60 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
                 _uiState.update {
                     it.copy(
                         avatar = usuarioActualizado.avatar ?: bytes,
-                        informacionModificadaExitosamente = true
+                        informacionModificadaExitosamente = true,
+                        mensajeActualizacion = "Foto de perfil actualizada correctamente."
                     )
                 }
             } catch (_: Exception) {
             }
         }
     }
+
+    private fun nombreValido(nombre: String): Boolean {
+        val limpio = nombre.trim().replace(Regex(" +"), " ")
+        return limpio.length in 2..100 &&
+                limpio.matches(Regex("^[\\p{L}]+(?: [\\p{L}]+)*$"))
+    }
+
+    private fun normalizarNombre(nombre: String): String {
+        return nombre.trim()
+            .replace(Regex(" +"), " ")
+            .lowercase()
+            .split(" ")
+            .joinToString(" ") { palabra ->
+                palabra.replaceFirstChar { it.titlecase() }
+            }
+    }
+
+
+    fun alCambiarNombre(nuevoNombre: String) {
+        if (nuevoNombre.length > 100) return
+        if (!nuevoNombre.all { it.isLetter() || it == ' ' }) return
+
+        val error = when {
+            nuevoNombre.trim().isEmpty() ->
+                "El nombre es obligatorio."
+
+            !nombreValido(nuevoNombre) ->
+                "Ingresa un nombre válido de 2 a 100 letras y espacios."
+
+            else -> null
+        }
+
+        _uiState.update { estado ->
+            estado.copy(
+                nombreCompleto = nuevoNombre,
+                errorNombre = error,
+                esValido = error == null &&
+                        estado.errorCorreo == null &&
+                        estado.errorTelefono == null &&
+                        estado.correoContacto.trim().matches(PATRON_CORREO) &&
+                        estado.telefonoContacto.length == 9,
+                informacionModificadaExitosamente = false
+            )
+        }
+    }
+
 
     fun alCambiarTelefono(nuevoTelefono: String) {
         if (nuevoTelefono.length > 9) return
@@ -104,7 +159,9 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
             val valido = nuevoTelefono.length == 9 &&
                     error == null &&
                     errorCorreoLimpio == null &&
-                    estado.correoContacto.trim().isNotBlank()
+                    estado.correoContacto.trim().matches(PATRON_CORREO) &&
+                    nombreValido(estado.nombreCompleto) &&
+                    estado.errorNombre == null
 
             estado.copy(
                 telefonoContacto = nuevoTelefono,
@@ -132,7 +189,11 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
                 estado.errorTelefono
             } else null
 
-            val valido = error == null && errorTelefonoLimpio == null && estado.telefonoContacto.length == 9
+            val valido = error == null &&
+                    errorTelefonoLimpio == null &&
+                    estado.telefonoContacto.length == 9 &&
+                    nombreValido(estado.nombreCompleto) &&
+                    estado.errorNombre == null
 
             estado.copy(
                 correoContacto = correoMinuscula,
@@ -144,44 +205,177 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+
     fun guardarCambios() {
         val estado = _uiState.value
-        if (estado.esValido) {
-            viewModelScope.launch {
-                try {
-                    val idActualizar = obtenerIdActivo()
-                    repositorio.actualizarPerfil(
-                        id = idActualizar,
-                        nombreCompleto = estado.nombreCompleto,
-                        correo = estado.correoContacto.trim(),
-                        telefono = estado.telefonoContacto
+
+        if (!estado.esValido || !nombreValido(estado.nombreCompleto)) {
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(mensajeActualizacion = null)
+            }
+
+            try {
+                val idActualizar = obtenerIdActivo()
+                val anteriores = perfilGuardado
+
+                val usuarioActualizado = repositorio.actualizarPerfil(
+                    id = idActualizar,
+                    nombreCompleto = normalizarNombre(estado.nombreCompleto),
+                    correo = estado.correoContacto.trim(),
+                    telefono = estado.telefonoContacto
+                )
+
+                val nuevoNombre = usuarioActualizado.nombreCompleto
+                val nuevoCorreo = usuarioActualizado.correo
+                val nuevoTelefono = usuarioActualizado.telefono
+
+                val cambioNombre = anteriores == null ||
+                        anteriores.first != nuevoNombre
+
+                val cambioCorreo = anteriores == null ||
+                        anteriores.second != nuevoCorreo
+
+                val cambioTelefono = anteriores == null ||
+                        anteriores.third != nuevoTelefono
+
+                val totalCambios = listOf(
+                    cambioNombre,
+                    cambioCorreo,
+                    cambioTelefono
+                ).count { it }
+
+                val mensaje = when {
+                    totalCambios == 0 ->
+                        "No se detectaron cambios en el perfil."
+
+                    totalCambios > 1 ->
+                        "Datos del perfil actualizados correctamente."
+
+                    cambioNombre ->
+                        "Nombre actualizado a $nuevoNombre."
+
+                    cambioCorreo ->
+                        "Correo actualizado a $nuevoCorreo."
+
+                    else ->
+                        "Teléfono actualizado a $nuevoTelefono."
+                }
+
+                perfilGuardado = Triple(
+                    nuevoNombre,
+                    nuevoCorreo,
+                    nuevoTelefono
+                )
+
+                _uiState.update {
+                    it.copy(
+                        nombreCompleto = nuevoNombre,
+                        correoContacto = nuevoCorreo,
+                        telefonoContacto = nuevoTelefono,
+                        errorNombre = null,
+                        errorCorreo = null,
+                        errorTelefono = null,
+                        esValido = true,
+                        informacionModificadaExitosamente = true,
+                        mensajeActualizacion = mensaje
                     )
-                    _uiState.update {
-                        it.copy(
-                            errorCorreo = null,
-                            errorTelefono = null,
-                            informacionModificadaExitosamente = true
-                        )
-                    }
-                } catch (e: Exception) {
-                    val mensaje = e.message ?: "Error al actualizar la información"
-                    _uiState.update { actual ->
-                        if (mensaje.contains("teléfono", ignoreCase = true) ||
-                            mensaje.contains("telefono", ignoreCase = true)
-                        ) {
+                }
+
+            } catch (e: Exception) {
+                val mensaje = e.message
+                    ?: "No se pudo actualizar el perfil."
+
+                _uiState.update { actual ->
+                    when {
+                        mensaje.contains("nombre", ignoreCase = true) ->
+                            actual.copy(
+                                errorNombre = mensaje,
+                                informacionModificadaExitosamente = false,
+                                mensajeActualizacion = null
+                            )
+
+                        mensaje.contains("teléfono", ignoreCase = true) ||
+                                mensaje.contains("telefono", ignoreCase = true) ->
                             actual.copy(
                                 errorTelefono = mensaje,
-                                informacionModificadaExitosamente = false
+                                informacionModificadaExitosamente = false,
+                                mensajeActualizacion = null
                             )
-                        } else {
+
+                        else ->
                             actual.copy(
                                 errorCorreo = mensaje,
-                                informacionModificadaExitosamente = false
+                                informacionModificadaExitosamente = false,
+                                mensajeActualizacion = null
                             )
-                        }
                     }
                 }
             }
+        }
+    }
+
+
+
+    fun cambiarContrasena(
+        actual: String,
+        nueva: String,
+        onResultado: (Boolean, String) -> Unit
+    ) {
+        if (actual.isBlank()) {
+            onResultado(false, "Ingresa tu contraseña actual.")
+            return
+        }
+
+        val valida = nueva.length >= 8 &&
+                nueva.any { it.isUpperCase() } &&
+                nueva.any { it.isDigit() } &&
+                nueva.any {
+                    !it.isLetterOrDigit() && !it.isWhitespace()
+                }
+
+        if (!valida) {
+            onResultado(
+                false,
+                "La nueva contraseña debe tener mínimo 8 caracteres, una mayúscula, un número y un carácter especial."
+            )
+            return
+        }
+
+        val idUsuario = sesion.leer()
+
+        if (idUsuario == SesionPreferencias.SIN_SESION) {
+            onResultado(false, "Debes iniciar sesión nuevamente.")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                repositorio.cambiarContrasenaDesdePerfil(
+                    id = idUsuario,
+                    contrasenaActual = actual,
+                    nuevaContrasena = nueva
+                )
+
+                onResultado(
+                    true,
+                    "Contraseña actualizada correctamente."
+                )
+            } catch (e: Exception) {
+                onResultado(
+                    false,
+                    e.message ?: "No se pudo cambiar la contraseña."
+                )
+            }
+        }
+    }
+
+    fun limpiarMensajeActualizacion() {
+        _uiState.update {
+            it.copy(mensajeActualizacion = null)
         }
     }
 
