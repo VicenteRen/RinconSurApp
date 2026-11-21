@@ -4,9 +4,7 @@ import cl.duoc.rinconsurapp.model.Acceso
 import cl.duoc.rinconsurapp.model.RegistroObservacion
 import cl.duoc.rinconsurapp.model.Usuario
 
-// =====================================================================
-//  DTOs para ms-observaciones (Puerto 8081)
-// =====================================================================
+
 
 data class RegistroObservacionRequest(
     val clasificacion: String,
@@ -43,9 +41,7 @@ fun RegistroObservacionResponse.aRegistroObservacion() = RegistroObservacion(
     nombreObservador = nombreObservador
 )
 
-// =====================================================================
-//  DTOs para ms-accesos (Puerto 8083)
-// =====================================================================
+
 
 data class AccesoRequest(
     val codigo: String,
@@ -66,9 +62,7 @@ fun AccesoResponse.aAcceso() = Acceso(
     activo = activo
 )
 
-// =====================================================================
-//  DTOs para ms-usuarios (Puerto 8082)
-// =====================================================================
+
 
 data class UsuarioRequest(
     val rut: String,

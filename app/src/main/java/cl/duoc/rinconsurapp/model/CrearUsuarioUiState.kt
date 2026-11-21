@@ -29,5 +29,6 @@ data class CrearUsuarioUiState(
 
     val errorGeneral: String? = null,
     val creacionExitosa: Boolean = false,
-    val formularioValido: Boolean = false
+    val formularioValido: Boolean = false,
+    val cargando: Boolean = false
 )

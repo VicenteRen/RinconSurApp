@@ -165,6 +165,7 @@ class UsuarioRepository(
             401 -> "RUT o contraseña incorrecta. Vuelva a intentarlo."
             409 -> "El registro ya existe en el sistema."
             404 -> "Usuario no encontrado."
+            502 -> "No fue posible enviar el correo con la contraseña temporal."
             else -> "Error del servidor (${e.code()})"
         }
     }

@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 class CrearUsuarioViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
-        const val CONTRASENA_TEMPORAL = "Temp1234*"
         private val PATRON_CORREO = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$")
     }
 
@@ -35,7 +34,8 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun onNombreCambiado(nombre: String) {
-        val nombreFormateado = nombre.split(" ").joinToString(" ") { palabra ->
+        val nombreFiltrado = nombre.filter { it.isLetter() || it == ' ' }.replace(Regex(" {2,}"), " ").trimStart()
+        val nombreFormateado = nombreFiltrado.split(" ").joinToString(" ") { palabra ->
             if (palabra.isNotEmpty()) palabra.lowercase().replaceFirstChar { it.uppercase() } else ""
         }
         _uiState.update { it.copy(nombre = nombreFormateado) }
@@ -95,23 +95,28 @@ class CrearUsuarioViewModel(application: Application) : AndroidViewModel(applica
 
     fun intentarCrearUsuario(textoRolAdmin: String) {
         val estado = _uiState.value
+        if (estado.cargando) return
+
         val rolId = if (estado.rolSeleccionado == textoRolAdmin) Rol.ID_ADMIN else Rol.ID_OBSERVADOR
 
         viewModelScope.launch {
+            _uiState.update { it.copy(cargando = true, errorGeneral = null) }
             try {
                 repositorio.crearUsuario(
                     rut = estado.rut,
-                    contrasena = CONTRASENA_TEMPORAL,
                     nombreCompleto = estado.nombre,
                     correo = estado.correo.trim(),
                     telefono = estado.telefono,
-                    preguntaSeguridad = "Pregunta inicial",
-                    respuestaSeguridad = "Respuesta inicial",
                     rolId = rolId
                 )
-                _uiState.update { it.copy(creacionExitosa = true, errorGeneral = null) }
+                _uiState.update { it.copy(cargando = false, creacionExitosa = true, errorGeneral = null) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(errorGeneral = e.message ?: "El RUT ya existe o error en el servidor.") }
+                _uiState.update {
+                    it.copy(
+                        cargando = false,
+                        errorGeneral = e.message ?: "El RUT ya existe o error en el servidor."
+                    )
+                }
             }
         }
     }

@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,12 +65,19 @@ fun AppNavegacion() {
 
     var usuarioActual by remember { mutableStateOf<Usuario?>(null) }
     var sesionVerificada by remember { mutableStateOf(false) }
+    var enProcesoPrimerIngreso by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         val idGuardado = sesion.leer()
         if (idGuardado != SesionPreferencias.SIN_SESION) {
             try {
-                usuarioActual = repositorio.buscarPorId(idGuardado)
+                val usuario = repositorio.buscarPorId(idGuardado)
+                if (usuario.primerIngreso && !enProcesoPrimerIngreso) {
+                    sesion.borrar()
+                    usuarioActual = null
+                } else {
+                    usuarioActual = usuario
+                }
             } catch (e: Exception) {
                 sesion.borrar()
                 usuarioActual = null
@@ -101,6 +109,7 @@ fun AppNavegacion() {
 
     val ejecutarCierreSesion = {
         sesion.borrar()
+        enProcesoPrimerIngreso = false
         usuarioActual = null
         primerIngresoViewModel.limpiarFormulario()
         navController.navigate(Ruta.InicioSesion.ruta) {
@@ -339,7 +348,10 @@ fun AppNavegacion() {
                                     val usuarioLogueado = repositorio.buscarPorId(idUsuario)
                                     usuarioActual = usuarioLogueado
                                     if (usuarioLogueado.primerIngreso) {
+                                        enProcesoPrimerIngreso = true
                                         primerIngresoViewModel.limpiarFormulario()
+                                    } else {
+                                        enProcesoPrimerIngreso = false
                                     }
                                     val rutaDestino = when {
                                         usuarioLogueado.primerIngreso -> Ruta.ConfigurarSeguridad.ruta
@@ -350,7 +362,6 @@ fun AppNavegacion() {
                                         popUpTo(Ruta.InicioSesion.ruta) { inclusive = true }
                                     }
                                 } catch (e: Exception) {
-                                    // Error de red al cargar perfil
                                 }
                             }
                         }
@@ -372,6 +383,7 @@ fun AppNavegacion() {
                 CrearContrasenaScreen(
                     viewModel = primerIngresoViewModel,
                     onPrimerIngresoCompletado = {
+                        enProcesoPrimerIngreso = false
                         usuarioActual = usuarioActual?.copy(primerIngreso = false)
                         val destinoFinal = if (usuarioActual?.rolId == Rol.ID_ADMIN) {
                             Ruta.DashboardAdmin.ruta
