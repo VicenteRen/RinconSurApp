@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 class PrimerIngresoViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repositorio = UsuarioRepository()
-    private val sesion = SesionPreferencias(application)
+    private val sesion by lazy { SesionPreferencias(getApplication()) }
 
     private val _uiState = MutableStateFlow(PrimerIngresoUiState())
     val uiState: StateFlow<PrimerIngresoUiState> = _uiState.asStateFlow()

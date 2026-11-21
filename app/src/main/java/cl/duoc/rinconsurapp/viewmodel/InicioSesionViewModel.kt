@@ -3,10 +3,8 @@ package cl.duoc.rinconsurapp.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import cl.duoc.rinconsurapp.data.RinconSurDbHelper
 import cl.duoc.rinconsurapp.data.SesionPreferencias
 import cl.duoc.rinconsurapp.data.UsuarioRepository
-import cl.duoc.rinconsurapp.data.remote.RetrofitClient
 import cl.duoc.rinconsurapp.model.InicioSesionUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +15,7 @@ import kotlinx.coroutines.launch
 class InicioSesionViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repositorio = UsuarioRepository()
-    private val sesion = SesionPreferencias(application)
+    private val sesion by lazy { SesionPreferencias(getApplication()) }
 
     private val _uiState = MutableStateFlow(InicioSesionUiState())
     val uiState: StateFlow<InicioSesionUiState> = _uiState.asStateFlow()
