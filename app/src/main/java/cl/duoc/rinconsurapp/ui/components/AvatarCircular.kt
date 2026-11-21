@@ -10,18 +10,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import cl.duoc.rinconsurapp.ui.theme.Dimens
+import coil3.compose.AsyncImage
 
 @Composable
 fun AvatarCircular(
     @DrawableRes imagen: Int,
     descripcion: String,
     modificador: Modifier = Modifier,
-    foto: ImageBitmap? = null
+    fotoUrl: String? = null
 ) {
     val modifierComun = modificador
         .size(120.dp)
@@ -29,10 +29,13 @@ fun AvatarCircular(
         .clip(CircleShape)
         .border(Dimens.bordeAvatar, MaterialTheme.colorScheme.surface, CircleShape)
 
-    if (foto != null) {
-        Image(
-            bitmap = foto,
+    if (!fotoUrl.isNullOrBlank()) {
+        AsyncImage(
+            model = fotoUrl,
             contentDescription = descripcion,
+            placeholder = painterResource(id = imagen),
+            error = painterResource(id = imagen),
+            fallback = painterResource(id = imagen),
             contentScale = ContentScale.Crop,
             modifier = modifierComun
         )
