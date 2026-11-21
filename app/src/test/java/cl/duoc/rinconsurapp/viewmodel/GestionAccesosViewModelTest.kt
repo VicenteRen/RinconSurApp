@@ -18,10 +18,8 @@ class GestionAccesosViewModelTest {
 
     @Test
     fun validar_conCamposVacios_devuelveFalseConErrores() {
-        // act - ejecucion
         val resultado = viewModel.validar()
 
-        // assert - comprobar
         assertFalse(resultado)
         assertEquals("El código es obligatorio (ej: A5)", viewModel.uiState.value.errorCodigo)
         assertEquals("El nombre del acceso es obligatorio", viewModel.uiState.value.errorNombre)
@@ -29,14 +27,11 @@ class GestionAccesosViewModelTest {
 
     @Test
     fun validar_conCodigoFormatoInvalido_devuelveFalseConErrorCodigo() {
-        // arrange - preparar
         viewModel.onCodigoCambia("PEPITO100")
         viewModel.onNombreCambia("Acceso Norte")
 
-        // act - ejecucion
         val resultado = viewModel.validar()
 
-        // assert - comprobar
         assertFalse(resultado)
         assertEquals("PE", viewModel.uiState.value.codigo)
         assertEquals("Usa 1 letra (A-Z) y 1 número (0-9), ej: A5 o B1", viewModel.uiState.value.errorCodigo)
@@ -45,14 +40,11 @@ class GestionAccesosViewModelTest {
 
     @Test
     fun validar_conDatosCompletos_devuelveTrueSinErrores() {
-        // arrange - preparar
         viewModel.onCodigoCambia("B5")
         viewModel.onNombreCambia("Acceso Boulevard")
 
-        // act - ejecucion
         val resultado = viewModel.validar()
 
-        // assert - comprobar
         assertTrue(resultado)
         assertEquals("B5", viewModel.uiState.value.codigo)
         assertEquals("Acceso Boulevard", viewModel.uiState.value.nombre)

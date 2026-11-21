@@ -73,4 +73,11 @@ class CrearUsuarioViewModelTest {
         assertEquals("", viewModel.uiState.value.telefono)
         assertFalse(viewModel.uiState.value.formularioValido)
     }
+
+    @Test
+    fun onNombreCambiado_conNumerosYEspaciosExtra_filtraYFormateaCorrectamente() {
+        viewModel.onNombreCambiado("   ana123   maría45!@#")
+
+        assertEquals("Ana María", viewModel.uiState.value.nombre)
+    }
 }

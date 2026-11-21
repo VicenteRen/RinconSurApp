@@ -31,17 +31,14 @@ class RegistroObservacionViewModelTest {
 
     @Test
     fun seleccionarOpciones_conDatosValidos_actualizaUiState() {
-        // arrange - preparar
         val accesoSur = Acceso(id = 2, codigo = "A2", nombre = "Acceso Sur")
 
-        // act - ejecutar
         viewModel.onAccesoDestinoSeleccionado(accesoSur)
         viewModel.onClasificacionSeleccionada(Clasificacion.VISITA)
         viewModel.onCompaniaSeleccionada(Compania.PAREJA)
         viewModel.onRangoEtarioSeleccionado(RangoEtario.RANGO_18_25)
         viewModel.onTieneComprasCambia(true)
 
-        // assert - comprobar
         assertEquals("A2", viewModel.uiState.value.accesoDestino?.codigo)
         assertEquals(Clasificacion.VISITA, viewModel.uiState.value.clasificacion)
         assertEquals(Compania.PAREJA, viewModel.uiState.value.compania)

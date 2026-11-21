@@ -150,9 +150,9 @@ fun CrearUsuarioContent(
             }
 
             BotonPrincipal(
-                texto = stringResource(R.string.btn_crear_usuario),
+                texto = if (uiState.cargando) "Enviando credenciales..." else stringResource(R.string.btn_crear_usuario),
                 onClick = onCrearUsuario,
-                habilitado = uiState.formularioValido,
+                habilitado = uiState.formularioValido && !uiState.cargando,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp)
@@ -166,7 +166,7 @@ fun CrearUsuarioContent(
                 text = {
                     Text(
                         "${stringResource(R.string.msg_usuario_creado)}\n\n" +
-                                "Contraseña temporal de primer ingreso: ${CrearUsuarioViewModel.CONTRASENA_TEMPORAL}"
+                                "Se envió una contraseña temporal al correo ${uiState.correo.trim()}."
                     )
                 },
                 confirmButton = {
