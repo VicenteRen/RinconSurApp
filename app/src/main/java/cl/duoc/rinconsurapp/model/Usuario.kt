@@ -9,7 +9,7 @@ data class Usuario(
     val telefono: String,
     val rolId: Long = Rol.ID_OBSERVADOR,
     val rolNombre: String = "",
-    val avatar: ByteArray? = null,
+    val avatarUrl: String? = null,
     val primerIngreso: Boolean = false,
     val activo: Boolean = true
 )

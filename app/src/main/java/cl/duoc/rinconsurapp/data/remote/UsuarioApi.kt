@@ -1,10 +1,13 @@
 package cl.duoc.rinconsurapp.data.remote
 
+import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 
 interface UsuarioApi {
@@ -45,10 +48,11 @@ interface UsuarioApi {
         @Body datos: Map<String, String>
     ): UsuarioResponse
 
-    @PUT("api/usuarios/{id}/avatar")
+    @Multipart
+    @POST("api/usuarios/{id}/avatar")
     suspend fun actualizarAvatar(
         @Path("id") id: Long,
-        @Body datos: Map<String, String>
+        @Part archivo: MultipartBody.Part
     ): UsuarioResponse
 
     @POST("api/usuarios/verificar-identidad")

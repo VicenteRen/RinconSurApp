@@ -6,12 +6,12 @@ data class PerfilUsuarioUiState(
     val cargo: String = "Observador",
     val telefonoContacto: String = "987654321",
     val correoContacto: String = "v.ponce@rinconsur.cl",
+    val errorNombre: String? = null,
     val errorTelefono: String? = null,
     val errorCorreo: String? = null,
-    val errorNombre: String? = null,
     val esValido: Boolean = true,
     val informacionModificadaExitosamente: Boolean = false,
     val mensajeActualizacion: String? = null,
     val cerrarSesionExitoso: Boolean = false,
-    val avatar: ByteArray? = null
+    val avatarUrl: String? = null
 )

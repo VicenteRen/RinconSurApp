@@ -55,7 +55,8 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
                         cargo = usuario.rolNombre,
                         telefonoContacto = usuario.telefono,
                         correoContacto = usuario.correo,
-                        avatar = usuario.avatar,
+                        avatarUrl = usuario.avatarUrl,
+                        errorNombre = null,
                         errorCorreo = null,
                         errorTelefono = null,
                         esValido = true,
@@ -84,12 +85,18 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
                 val usuarioActualizado = repositorio.actualizarAvatar(idUsuario, bytes)
                 _uiState.update {
                     it.copy(
-                        avatar = usuarioActualizado.avatar ?: bytes,
+                        avatarUrl = usuarioActualizado.avatarUrl,
                         informacionModificadaExitosamente = true,
                         mensajeActualizacion = "Foto de perfil actualizada correctamente."
                     )
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        informacionModificadaExitosamente = false,
+                        mensajeActualizacion = e.message ?: "No se pudo subir la foto de perfil."
+                    )
+                }
             }
         }
     }
@@ -109,7 +116,6 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
                 palabra.replaceFirstChar { it.titlecase() }
             }
     }
-
 
     fun alCambiarNombre(nuevoNombre: String) {
         if (nuevoNombre.length > 100) return
@@ -138,7 +144,6 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
             )
         }
     }
-
 
     fun alCambiarTelefono(nuevoTelefono: String) {
         if (nuevoTelefono.length > 9) return
@@ -204,7 +209,6 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
             )
         }
     }
-
 
     fun guardarCambios() {
         val estado = _uiState.value
@@ -284,7 +288,6 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
                         mensajeActualizacion = mensaje
                     )
                 }
-
             } catch (e: Exception) {
                 val mensaje = e.message
                     ?: "No se pudo actualizar el perfil."
@@ -317,8 +320,6 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
             }
         }
     }
-
-
 
     fun cambiarContrasena(
         actual: String,

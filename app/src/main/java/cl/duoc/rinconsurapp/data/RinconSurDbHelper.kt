@@ -13,7 +13,7 @@ class RinconSurDbHelper(context: Context) :
 
     companion object {
         private const val NOMBRE_BD = "rinconsur.db"
-        private const val VERSION_BD = 7
+        private const val VERSION_BD = 8
 
         fun encriptar(texto: String): String {
             val bytes = MessageDigest.getInstance("SHA-256").digest(texto.toByteArray())
@@ -32,7 +32,7 @@ class RinconSurDbHelper(context: Context) :
         private const val USU_CORREO = "correo"
         private const val USU_TELEFONO = "telefono"
         private const val USU_ROL = "id_rol"
-        private const val USU_AVATAR = "avatar"
+        private const val USU_AVATAR_URL = "avatar_url"
 
         private const val USU_PREG_SEGURIDAD = "pregunta_seguridad"
         private const val USU_RESP_SEGURIDAD = "respuesta_seguridad"
@@ -48,7 +48,6 @@ class RinconSurDbHelper(context: Context) :
         private const val REG_DESTINO = "acceso_destino"
         private const val REG_FECHA_HORA = "fecha_hora"
         private const val REG_USUARIO = "id_usuario"
-
 
         private const val SQL_CREAR_ROLES =
             "CREATE TABLE $TABLA_ROLES (" +
@@ -66,7 +65,7 @@ class RinconSurDbHelper(context: Context) :
                     "$USU_PREG_SEGURIDAD TEXT NOT NULL, " +
                     "$USU_RESP_SEGURIDAD TEXT NOT NULL, " +
                     "$USU_ACTIVO INTEGER NOT NULL DEFAULT 1, " +
-                    "$USU_AVATAR BLOB, " +
+                    "$USU_AVATAR_URL TEXT, " +
                     "$USU_ROL INTEGER NOT NULL REFERENCES $TABLA_ROLES($ROL_ID))"
 
         private const val SQL_CREAR_REGISTROS =
@@ -88,7 +87,6 @@ class RinconSurDbHelper(context: Context) :
             "INSERT INTO $TABLA_USUARIOS ($USU_ID, $USU_RUT, $USU_CONTRASENA, $USU_NOMBRE, $USU_CORREO, $USU_TELEFONO, $USU_PREG_SEGURIDAD, $USU_RESP_SEGURIDAD, $USU_ACTIVO, $USU_ROL) VALUES " +
                     "(1, '214297353', '${encriptar("observador123")}', 'Vicente Ponce', 'v.ponce@rinconsur.cl', '987654321', '¿Cuál es el nombre de tu primera mascota?', 'princesa', 1, 1), " +
                     "(2, '228405566', '${encriptar("admin123")}', 'Jefe Administrador', 'admin@rinconsur.cl', '911223344', '¿En qué ciudad se conocieron tus padres?', 'santiago', 1, 2)"
-
 
         private const val SQL_SELECT_USUARIOS =
             "SELECT u.*, r.$ROL_NOMBRE AS $ROL_NOMBRE " +
@@ -120,7 +118,6 @@ class RinconSurDbHelper(context: Context) :
         db.execSQL("DROP TABLE IF EXISTS $TABLA_ROLES")
         onCreate(db)
     }
-
 
     fun autenticar(rut: String, contrasena: String): Usuario? =
         consultarUsuarios(
@@ -162,9 +159,9 @@ class RinconSurDbHelper(context: Context) :
         return false
     }
 
-    fun actualizarAvatar(id: Long, avatar: ByteArray): Int {
+    fun actualizarAvatar(id: Long, avatarUrl: String?): Int {
         val valores = ContentValues().apply {
-            put(USU_AVATAR, avatar)
+            put(USU_AVATAR_URL, avatarUrl)
         }
         return writableDatabase.update(TABLA_USUARIOS, valores, "$USU_ID = ?", arrayOf(id.toString()))
     }
@@ -194,7 +191,7 @@ class RinconSurDbHelper(context: Context) :
             put(USU_TELEFONO, telefono.trim())
             put(USU_PREG_SEGURIDAD, preguntaSeguridad)
             put(USU_RESP_SEGURIDAD, respuestaSeguridad.trim())
-            put(USU_ACTIVO, 1) // Queda habilitado
+            put(USU_ACTIVO, 1)
             put(USU_ROL, rolId)
         }
 
@@ -259,7 +256,6 @@ class RinconSurDbHelper(context: Context) :
     fun eliminarRegistro(idRegistro: Long): Int =
         writableDatabase.delete(TABLA_REGISTROS, "$REG_ID = ?", arrayOf(idRegistro.toString()))
 
-
     private fun consultarUsuarios(sql: String, args: Array<String>?): List<Usuario> {
         val lista = mutableListOf<Usuario>()
         readableDatabase.rawQuery(sql, args).use { cursor ->
@@ -275,8 +271,8 @@ class RinconSurDbHelper(context: Context) :
                         activo = cursor.getInt(cursor.getColumnIndexOrThrow(USU_ACTIVO)) == 1,
                         rolId = cursor.getLong(cursor.getColumnIndexOrThrow(USU_ROL)),
                         rolNombre = cursor.getString(cursor.getColumnIndexOrThrow(ROL_NOMBRE)),
-                        avatar = cursor.getColumnIndexOrThrow(USU_AVATAR).let { col ->
-                            if (cursor.isNull(col)) null else cursor.getBlob(col)
+                        avatarUrl = cursor.getColumnIndexOrThrow(USU_AVATAR_URL).let { col ->
+                            if (cursor.isNull(col)) null else cursor.getString(col)
                         }
                     )
                 )
@@ -293,7 +289,7 @@ class RinconSurDbHelper(context: Context) :
                 lista.add(
                     RegistroObservacion(
                         id = cursor.getLong(cursor.getColumnIndexOrThrow(REG_ID)),
-                        clasificacion = cursor.getString(cursor.getColumnIndexOrThrow(REG_CLASIFICACION )) ,
+                        clasificacion = cursor.getString(cursor.getColumnIndexOrThrow(REG_CLASIFICACION)),
                         rangoEtario = cursor.getString(cursor.getColumnIndexOrThrow(REG_RANGO)),
                         compania = cursor.getString(cursor.getColumnIndexOrThrow(REG_COMPANIA)),
                         tieneComprasExternas = cursor.getInt(cursor.getColumnIndexOrThrow(REG_COMPRAS)) == 1,

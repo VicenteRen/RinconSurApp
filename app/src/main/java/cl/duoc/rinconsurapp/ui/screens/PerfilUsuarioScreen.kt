@@ -35,8 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -45,7 +43,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cl.duoc.rinconsurapp.R
-import cl.duoc.rinconsurapp.data.ConvertidorImagen
 import cl.duoc.rinconsurapp.data.Vibracion
 import cl.duoc.rinconsurapp.model.PerfilUsuarioUiState
 import cl.duoc.rinconsurapp.permisos.Permisos
@@ -60,7 +57,6 @@ import cl.duoc.rinconsurapp.ui.theme.Primario
 import cl.duoc.rinconsurapp.ui.theme.RinconSurAppTheme
 import cl.duoc.rinconsurapp.viewmodel.PerfilUsuarioViewModel
 import kotlinx.coroutines.launch
-
 
 @Composable
 fun PerfilUsuarioScreen(
@@ -77,9 +73,6 @@ fun PerfilUsuarioScreen(
     val textoGaleriaDenegada = stringResource(R.string.permiso_galeria_denegado)
     val textoAjustes = stringResource(R.string.btn_ajustes)
 
-
-    // Lanzador para mostrar el Snackbar flotante al actualizar con éxito
-
     LaunchedEffect(uiState.mensajeActualizacion) {
         val mensaje = uiState.mensajeActualizacion
 
@@ -92,7 +85,6 @@ fun PerfilUsuarioScreen(
             viewModel.limpiarMensajeActualizacion()
         }
     }
-
 
     fun avisarPermisoDenegado(mensaje: String) {
         scope.launch {
@@ -147,13 +139,9 @@ fun PerfilUsuarioScreen(
         if (concedido) abrirGaleria() else avisarPermisoDenegado(textoGaleriaDenegada)
     }
 
-    val foto = remember(uiState.avatar) {
-        uiState.avatar?.let { bytes -> ConvertidorImagen.aBitmap(bytes)?.asImageBitmap() }
-    }
-
     PerfilUsuarioContent(
         uiState = uiState,
-        foto = foto,
+        fotoUrl = uiState.avatarUrl,
         snackbarHostState = snackbarHostState,
         onTomarFoto = {
             if (Permisos.tiene(context, Permisos.CAMARA)) abrirCamara()
@@ -189,7 +177,7 @@ fun PerfilUsuarioScreen(
 @Composable
 fun PerfilUsuarioContent(
     uiState: PerfilUsuarioUiState,
-    foto: ImageBitmap? = null,
+    fotoUrl: String? = null,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onTomarFoto: () -> Unit = {},
     onAbrirGaleria: () -> Unit = {},
@@ -249,7 +237,7 @@ fun PerfilUsuarioContent(
                     imagen = R.drawable.avatar_usuario,
                     descripcion = stringResource(id = R.string.cd_foto_perfil),
                     modificador = Modifier.offset(y = 60.dp),
-                    foto = foto
+                    fotoUrl = fotoUrl
                 )
             }
 
@@ -281,7 +269,6 @@ fun PerfilUsuarioContent(
                 TarjetaSeccion(titulo = stringResource(id = R.string.titulo_info_contacto)) {
                     Spacer(modifier = Modifier.height(16.dp))
 
-
                     CampoTexto(
                         valor = uiState.nombreCompleto,
                         onValorCambia = alCambiarNombre,
@@ -291,7 +278,6 @@ fun PerfilUsuarioContent(
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
-
 
                     CampoTexto(
                         valor = uiState.correoContacto,
@@ -319,9 +305,7 @@ fun PerfilUsuarioContent(
                         habilitado = uiState.esValido,
                         modifier = Modifier.fillMaxWidth()
                     )
-
                 }
-
 
                 OutlinedButton(
                     onClick = {
@@ -331,7 +315,6 @@ fun PerfilUsuarioContent(
                 ) {
                     Text("Cambiar contraseña")
                 }
-
 
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -371,7 +354,6 @@ fun PerfilUsuarioContent(
                 }
             )
         }
-
 
         if (mostrarDialogoCerrar) {
             AlertDialog(
@@ -417,7 +399,6 @@ fun PerfilUsuarioPreview() {
             uiState = PerfilUsuarioUiState(),
             alCambiarTelefono = {},
             alCambiarCorreo = {},
-
             alGuardar = {},
             alCerrarSesion = {},
             onAbrirMenu = {}

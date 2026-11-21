@@ -1,6 +1,5 @@
 package cl.duoc.rinconsurapp.data.remote
 
-import android.util.Base64
 import cl.duoc.rinconsurapp.model.Acceso
 import cl.duoc.rinconsurapp.model.RegistroObservacion
 import cl.duoc.rinconsurapp.model.Usuario
@@ -73,12 +72,12 @@ fun AccesoResponse.aAcceso() = Acceso(
 
 data class UsuarioRequest(
     val rut: String,
-    val contrasena: String,
+    val contrasena: String = "",
     val nombreCompleto: String,
     val correo: String,
     val telefono: String,
-    val preguntaSeguridad: String,
-    val respuestaSeguridad: String,
+    val preguntaSeguridad: String = "¿Cuál es el nombre de tu primera mascota?",
+    val respuestaSeguridad: String = "pendiente",
     val rolId: Long
 )
 
@@ -91,7 +90,7 @@ data class UsuarioResponse(
     val telefono: String,
     val rolId: Long,
     val rolNombre: String,
-    val avatar: String? = null,
+    val avatarUrl: String? = null,
     val primerIngreso: Boolean? = false,
     val activo: Boolean
 )
@@ -105,13 +104,7 @@ fun UsuarioResponse.aUsuario() = Usuario(
     telefono = telefono,
     rolId = rolId,
     rolNombre = rolNombre,
-    avatar = avatar?.let {
-        try {
-            Base64.decode(it, Base64.DEFAULT)
-        } catch (e: Exception) {
-            null
-        }
-    },
+    avatarUrl = RetrofitClient.resolverUrl(avatarUrl),
     primerIngreso = primerIngreso ?: false,
     activo = activo
 )

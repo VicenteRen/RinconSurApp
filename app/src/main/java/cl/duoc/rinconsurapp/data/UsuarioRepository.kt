@@ -1,11 +1,13 @@
 package cl.duoc.rinconsurapp.data
 
-import android.util.Base64
 import cl.duoc.rinconsurapp.data.remote.RetrofitClient
 import cl.duoc.rinconsurapp.data.remote.UsuarioApi
 import cl.duoc.rinconsurapp.data.remote.UsuarioRequest
 import cl.duoc.rinconsurapp.data.remote.aUsuario
 import cl.duoc.rinconsurapp.model.Usuario
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import retrofit2.HttpException
 import java.io.IOException
@@ -32,12 +34,12 @@ class UsuarioRepository(
 
     suspend fun crearUsuario(
         rut: String,
-        contrasena: String,
+        contrasena: String = "",
         nombreCompleto: String,
         correo: String,
         telefono: String,
-        preguntaSeguridad: String,
-        respuestaSeguridad: String,
+        preguntaSeguridad: String = "¿Cuál es el nombre de tu primera mascota?",
+        respuestaSeguridad: String = "pendiente",
         rolId: Long
     ): Usuario {
         val request = UsuarioRequest(
@@ -106,12 +108,10 @@ class UsuarioRepository(
         }.aUsuario()
 
     suspend fun actualizarAvatar(id: Long, avatarBytes: ByteArray): Usuario {
-        val avatarBase64 = Base64.encodeToString(avatarBytes, Base64.NO_WRAP)
+        val cuerpo = avatarBytes.toRequestBody("image/jpeg".toMediaType())
+        val parte = MultipartBody.Part.createFormData("archivo", "avatar.jpg", cuerpo)
         return llamar {
-            usuarioApi.actualizarAvatar(
-                id = id,
-                datos = mapOf("avatar" to avatarBase64)
-            )
+            usuarioApi.actualizarAvatar(id = id, archivo = parte)
         }.aUsuario()
     }
 
@@ -125,7 +125,6 @@ class UsuarioRepository(
                 )
             )
         }
-
 
     suspend fun recuperarContrasena(
         rut: String,
