@@ -34,7 +34,6 @@ fun CrearContrasenaScreen(
         uiState = uiState,
         onContrasenaCambiada = { viewModel.onContrasenaCambiada(it) },
         onConfirmarContrasenaCambiada = { viewModel.onConfirmarContrasenaCambiada(it) },
-        onAlternarVisibilidad = { viewModel.alternarVisibilidadContrasenas() },
         onGuardar = { viewModel.finalizarPrimerIngreso(onPrimerIngresoCompletado) },
         onVolver = onVolver
     )
@@ -46,10 +45,13 @@ fun CrearContrasenaContent(
     uiState: PrimerIngresoUiState,
     onContrasenaCambiada: (String) -> Unit,
     onConfirmarContrasenaCambiada: (String) -> Unit,
-    onAlternarVisibilidad: () -> Unit,
     onGuardar: () -> Unit,
     onVolver: () -> Unit
 ) {
+
+    var mostrarContrasena by remember { mutableStateOf(false) }
+    var mostrarConfirmacion by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -87,8 +89,8 @@ fun CrearContrasenaContent(
                 valor = uiState.contrasena,
                 onValorCambia = onContrasenaCambiada,
                 etiqueta = stringResource(R.string.etiqueta_nueva_contrasena),
-                visible = uiState.contrasenasVisibles,
-                onAlternarVisible = onAlternarVisibilidad,
+                visible = mostrarContrasena,
+                onAlternarVisible = { mostrarContrasena = !mostrarContrasena },
                 error = null
             )
 
@@ -96,8 +98,8 @@ fun CrearContrasenaContent(
                 valor = uiState.confirmarContrasena,
                 onValorCambia = onConfirmarContrasenaCambiada,
                 etiqueta = stringResource(R.string.etiqueta_confirmar_contrasena),
-                visible = uiState.contrasenasVisibles,
-                onAlternarVisible = onAlternarVisibilidad,
+                visible = mostrarConfirmacion,
+                onAlternarVisible = { mostrarConfirmacion = !mostrarConfirmacion },
                 error = uiState.contrasenaError
             )
 
@@ -144,7 +146,6 @@ fun CrearContrasenaPreview() {
             uiState = PrimerIngresoUiState(),
             onContrasenaCambiada = {},
             onConfirmarContrasenaCambiada = {},
-            onAlternarVisibilidad = {},
             onGuardar = {},
             onVolver = {}
         )
