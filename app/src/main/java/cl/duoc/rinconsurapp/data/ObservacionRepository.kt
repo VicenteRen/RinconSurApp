@@ -20,7 +20,6 @@ class ObservacionRepository(
     private val accesoApi: AccesoApi = RetrofitClient.accesoApi
 ) {
 
-    // --- Operaciones de Observaciones ---
     suspend fun guardarObservacion(registro: RegistroObservacion): RegistroObservacion {
         val request = RegistroObservacionRequest(
             clasificacion = registro.clasificacion,
