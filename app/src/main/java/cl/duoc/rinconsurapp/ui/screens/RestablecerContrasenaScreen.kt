@@ -39,8 +39,6 @@ fun RestablecerContrasenaScreen(
         onNuevaContrasenaCambiada = viewModel::onNuevaContrasenaCambiada,
         onConfirmarContrasenaCambiada =
             viewModel::onConfirmarContrasenaCambiada,
-        onAlternarVisibilidad =
-            viewModel::alternarVisibilidadContrasenas,
         onVerificar = viewModel::verificarIdentidad,
         onRestablecer = viewModel::intentarRestablecerContrasena,
         onVolver = {
@@ -66,13 +64,16 @@ fun RestablecerContrasenaContent(
     onRespuestaCambiada: (String) -> Unit,
     onNuevaContrasenaCambiada: (String) -> Unit,
     onConfirmarContrasenaCambiada: (String) -> Unit,
-    onAlternarVisibilidad: () -> Unit,
     onVerificar: () -> Unit,
     onRestablecer: () -> Unit,
     onVolver: () -> Unit,
     onDialogoCerrado: () -> Unit
 ) {
     val pasoDos = uiState.identidadVerificada
+
+    var mostrarContrasena by remember { mutableStateOf(false) }
+    var mostrarConfirmacion by remember { mutableStateOf(false) }
+
 
     Scaffold(
         topBar = {
@@ -199,8 +200,8 @@ fun RestablecerContrasenaContent(
                     etiqueta = stringResource(
                         R.string.etiqueta_nueva_contrasena
                     ),
-                    visible = uiState.contrasenasVisibles,
-                    onAlternarVisible = onAlternarVisibilidad,
+                    visible = mostrarContrasena,
+                    onAlternarVisible = { mostrarContrasena = !mostrarContrasena },
                     error = null
                 )
 
@@ -210,8 +211,8 @@ fun RestablecerContrasenaContent(
                     etiqueta = stringResource(
                         R.string.etiqueta_confirmar_contrasena
                     ),
-                    visible = uiState.contrasenasVisibles,
-                    onAlternarVisible = onAlternarVisibilidad,
+                    visible = mostrarConfirmacion,
+                    onAlternarVisible = { mostrarConfirmacion = !mostrarConfirmacion },
                     error = uiState.contrasenaError
                 )
 
