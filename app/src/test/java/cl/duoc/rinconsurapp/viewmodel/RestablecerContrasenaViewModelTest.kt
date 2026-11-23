@@ -17,12 +17,9 @@ class RestablecerContrasenaViewModelTest {
     }
     @Test
     fun onNuevaContrasenaCambiada_sinCaracterEspecial_noValidarFormulario(){
-        //arrange - preparar
         val contrasena = "Clave123"
-        //act = ejecucion
         viewModel.onNuevaContrasenaCambiada(contrasena)
         viewModel.onConfirmarContrasenaCambiada(contrasena)
-        //assert - comprobar
         assertEquals(contrasena, viewModel.uiState.value.nuevaContrasena)
         assertTrue(viewModel.uiState.value.tieneLongitudValida)
         assertTrue(viewModel.uiState.value.tieneMayuscula)
@@ -34,12 +31,11 @@ class RestablecerContrasenaViewModelTest {
 
     @Test
     fun onConfirmarContrasenaCambiada_alCorregirCoincidencia_validaFormulario() {
-        // arrange - preparar
         viewModel.onNuevaContrasenaCambiada("Clave123*")
         viewModel.onConfirmarContrasenaCambiada("Otra123*")
-        // act - ejecucion
+
         viewModel.onConfirmarContrasenaCambiada("Clave123*")
-        // assert - comprobar
+
         assertEquals("Clave123*", viewModel.uiState.value.nuevaContrasena)
         assertEquals("Clave123*", viewModel.uiState.value.confirmarContrasena)
         assertTrue(viewModel.uiState.value.tieneEspecial)

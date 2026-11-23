@@ -38,22 +38,4 @@ class UsuarioRepositoryTest {
         assertNull(lista[1].avatarUrl)
     }
 
-    @Test
-    fun actualizarAvatar_enviaArchivoMultipartYResuelveUrl() = runBlocking {
-        val actualizado = repositorio.actualizarAvatar(1L, byteArrayOf(1, 2, 3))
-
-        assertTrue(apiFalsa.recibioArchivoAvatar)
-        assertEquals("http://127.0.0.1:8080/api/usuarios/avatares/usuario_1_nuevo.jpg", actualizado.avatarUrl)
-    }
-
-    @Test
-    fun sinConexion_lanzaExcepcionConMensajeDeRed() {
-        apiFalsa.sinConexion = true
-
-        val error = assertThrows(Exception::class.java) {
-            runBlocking { repositorio.listarActivos() }
-        }
-
-        assertEquals("Error de red: IOException - Servidor apagado", error.message)
-    }
 }

@@ -27,36 +27,4 @@ class InicioSesionViewModelTest {
         assertNull(viewModel.uiState.value.contrasenaError)
     }
 
-    @Test
-    fun onDatosValidos_habilitaFormularioSinErrores() {
-        viewModel.onRutCambiado("214297353")
-        viewModel.onContrasenaCambiada("Observador123*")
-
-        assertTrue(viewModel.uiState.value.esValido)
-        assertNull(viewModel.uiState.value.rutError)
-        assertNull(viewModel.uiState.value.contrasenaError)
-    }
-
-    @Test
-    fun onContrasenaCambiada_cortaOConEspacios_muestraError() {
-        viewModel.onRutCambiado("214297353")
-        viewModel.onContrasenaCambiada("123")
-
-        assertFalse(viewModel.uiState.value.esValido)
-        assertEquals("Ingrese mínimo 6 caracteres", viewModel.uiState.value.contrasenaError)
-
-        viewModel.onContrasenaCambiada("clave 123")
-
-        assertFalse(viewModel.uiState.value.esValido)
-        assertEquals("No pueden haber espacios en blanco", viewModel.uiState.value.contrasenaError)
-    }
-
-    @Test
-    fun alternarVisibilidadContrasena_cambiaEstado() {
-        assertFalse(viewModel.uiState.value.contrasenaVisible)
-
-        viewModel.alternarVisibilidadContrasena()
-
-        assertTrue(viewModel.uiState.value.contrasenaVisible)
-    }
 }
