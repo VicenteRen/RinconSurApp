@@ -1,4 +1,3 @@
-
 package cl.duoc.rinconsurapp.viewmodel
 
 import android.app.Application
@@ -104,6 +103,8 @@ class RestablecerContrasenaViewModel(
     }
 
     fun onNuevaContrasenaCambiada(contrasena: String) {
+        if (contrasena.length > 64) return
+
         _uiState.update {
             actualizarValidaciones(
                 it.copy(
@@ -115,6 +116,8 @@ class RestablecerContrasenaViewModel(
     }
 
     fun onConfirmarContrasenaCambiada(contrasena: String) {
+        if (contrasena.length > 64) return
+
         _uiState.update {
             actualizarValidaciones(
                 it.copy(
@@ -130,7 +133,7 @@ class RestablecerContrasenaViewModel(
     ): RestablecerContrasenaUiState {
         val clave = estado.nuevaContrasena
 
-        val longitud = clave.length >= 8
+        val longitud = clave.length in 8..64
         val numero = clave.any { it.isDigit() }
         val mayuscula = clave.any { it.isUpperCase() }
         val especial = clave.any {

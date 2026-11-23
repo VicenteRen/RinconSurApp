@@ -1,4 +1,3 @@
-
 package cl.duoc.rinconsurapp.ui.screens
 
 import androidx.compose.foundation.layout.*
@@ -222,7 +221,7 @@ fun RestablecerContrasenaContent(
                 )
 
                 RequisitoTexto(
-                    "Mínimo 8 caracteres",
+                    "Entre 8 y 64 caracteres",
                     uiState.tieneLongitudValida
                 )
 
