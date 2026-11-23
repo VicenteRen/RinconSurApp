@@ -34,7 +34,7 @@ fun CampoContrasena(
 ) {
     OutlinedTextField(
         value = valor,
-        onValueChange = onValorCambia,
+        onValueChange = { if (it.length <= 64) onValorCambia(it) },
         modifier = modifier.fillMaxWidth(),
         label = { Text(etiqueta) },
         leadingIcon = {

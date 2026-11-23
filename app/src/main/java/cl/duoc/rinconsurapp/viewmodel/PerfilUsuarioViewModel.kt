@@ -331,7 +331,12 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
             return
         }
 
-        val valida = nueva.length >= 8 &&
+        if (actual.length > 64) {
+            onResultado(false, "La contraseña actual no puede superar los 64 caracteres.")
+            return
+        }
+
+        val valida = nueva.length in 8..64 &&
                 nueva.any { it.isUpperCase() } &&
                 nueva.any { it.isDigit() } &&
                 nueva.any {
@@ -341,7 +346,7 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
         if (!valida) {
             onResultado(
                 false,
-                "La nueva contraseña debe tener mínimo 8 caracteres, una mayúscula, un número y un carácter especial."
+                "La nueva contraseña debe tener entre 8 y 64 caracteres, una mayúscula, un número y un carácter especial."
             )
             return
         }

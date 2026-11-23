@@ -40,10 +40,11 @@ class InicioSesionViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun onContrasenaCambiada(nuevaContrasena: String) {
+        if (nuevaContrasena.length > 64) return
+
         val error = when {
             nuevaContrasena.isBlank() -> "Contraseña obligatoria"
             nuevaContrasena.length < 6 -> "Ingrese mínimo 6 caracteres"
-            nuevaContrasena.contains(" ") -> "No pueden haber espacios en blanco"
             else -> null
         }
 

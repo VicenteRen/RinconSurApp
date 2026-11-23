@@ -46,7 +46,7 @@
     <string name="btn_cambiar_contrasena">Cambiar Contraseña</string>
     <string name="msg_contrasena_restablecida">¡Contraseña restablecida con éxito!</string>
     <string name="titulo_requisitos_contrasena">Requisitos de la nueva contraseña:</string>
-    <string name="req_longitud">Mínimo 8 caracteres</string>
+    <string name="req_longitud">Entre 8 y 64 caracteres</string>
     <string name="req_numero">Al menos un número (0-9)</string>
     <string name="req_mayuscula">Al menos una letra mayúscula</string>
     <string name="titulo_restablecer">Restablecer Contraseña</string>

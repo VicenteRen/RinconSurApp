@@ -1,4 +1,3 @@
-
 package cl.duoc.rinconsurapp.ui.components
 
 import androidx.compose.foundation.layout.*
@@ -29,7 +28,7 @@ fun DialogoCambiarContrasena(
     var error by remember { mutableStateOf<String?>(null) }
     var guardando by remember { mutableStateOf(false) }
 
-    val longitud = nueva.length >= 8
+    val longitud = nueva.length in 8..64
     val mayuscula = nueva.any { it.isUpperCase() }
     val numero = nueva.any { it.isDigit() }
     val especial = nueva.any {
@@ -59,8 +58,10 @@ fun DialogoCambiarContrasena(
                 CampoContrasena(
                     valor = actual,
                     onValorCambia = {
-                        actual = it
-                        error = null
+                        if (it.length <= 64) {
+                            actual = it
+                            error = null
+                        }
                     },
                     etiqueta = "Contraseña actual",
                     visible = mostrarActual,
@@ -72,8 +73,10 @@ fun DialogoCambiarContrasena(
                 CampoContrasena(
                     valor = nueva,
                     onValorCambia = {
-                        nueva = it
-                        error = null
+                        if (it.length <= 64) {
+                            nueva = it
+                            error = null
+                        }
                     },
                     etiqueta = "Nueva contraseña",
                     visible = mostrarNueva,
@@ -88,7 +91,7 @@ fun DialogoCambiarContrasena(
                 )
 
                 RequisitoClavePerfil(
-                    "Mínimo 8 caracteres",
+                    "Entre 8 y 64 caracteres",
                     longitud
                 )
 
@@ -110,8 +113,10 @@ fun DialogoCambiarContrasena(
                 CampoContrasena(
                     valor = confirmar,
                     onValorCambia = {
-                        confirmar = it
-                        error = null
+                        if (it.length <= 64) {
+                            confirmar = it
+                            error = null
+                        }
                     },
                     etiqueta = "Confirmar nueva contraseña",
                     visible = mostrarConfirmar,

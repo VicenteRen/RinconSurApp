@@ -34,7 +34,7 @@ fun DialogoAnularObservacion(
                 motivoLimpio.none { it.isISOControl() }
 
     val formularioValido =
-        motivoValido && contrasena.isNotBlank()
+        motivoValido && contrasena.isNotBlank() && contrasena.length <= 64
 
     AlertDialog(
         onDismissRequest = {
@@ -77,8 +77,10 @@ fun DialogoAnularObservacion(
                 OutlinedTextField(
                     value = contrasena,
                     onValueChange = {
-                        contrasena = it
-                        error = ""
+                        if (it.length <= 64) {
+                            contrasena = it
+                            error = ""
+                        }
                     },
                     label = { Text("Contraseña actual") },
                     visualTransformation =

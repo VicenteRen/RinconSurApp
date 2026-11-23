@@ -63,6 +63,8 @@ class PrimerIngresoViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun onContrasenaCambiada(contrasena: String) {
+        if (contrasena.length > 64) return
+
         _uiState.update { estado ->
             val coinciden = contrasena == estado.confirmarContrasena
             val error = if (estado.confirmarContrasena.isNotBlank() && !coinciden) {
@@ -71,7 +73,7 @@ class PrimerIngresoViewModel(application: Application) : AndroidViewModel(applic
 
             estado.copy(
                 contrasena = contrasena,
-                tieneLongitudValida = contrasena.length >= 8,
+                tieneLongitudValida = contrasena.length in 8..64,
                 tieneNumero = contrasena.any { it.isDigit() },
                 tieneMayuscula = contrasena.any { it.isUpperCase() },
                 tieneEspecial = contrasena.any {
@@ -85,6 +87,8 @@ class PrimerIngresoViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun onConfirmarContrasenaCambiada(contrasena: String) {
+        if (contrasena.length > 64) return
+
         _uiState.update { estado ->
             val coinciden = estado.contrasena == contrasena
             val error = if (contrasena.isNotBlank() && !coinciden) {
