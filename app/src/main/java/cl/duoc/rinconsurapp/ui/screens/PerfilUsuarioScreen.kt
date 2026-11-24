@@ -62,7 +62,8 @@ import kotlinx.coroutines.launch
 fun PerfilUsuarioScreen(
     viewModel: PerfilUsuarioViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     onAbrirMenu: () -> Unit = {},
-    onCerrarSesion: () -> Unit = {}
+    onCerrarSesion: () -> Unit = {},
+    onNombreActualizado: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -163,7 +164,7 @@ fun PerfilUsuarioScreen(
         },
         alGuardar = {
             Vibracion.vibrar(context)
-            viewModel.guardarCambios()
+            viewModel.guardarCambios(onNombreActualizado = onNombreActualizado)
         },
         alCerrarSesion = {
             viewModel.cerrarSesion()

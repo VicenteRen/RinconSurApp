@@ -418,7 +418,10 @@ fun AppNavegacion() {
             composable(Ruta.Perfil.ruta) {
                 PerfilUsuarioScreen(
                     onAbrirMenu = abrirMenu,
-                    onCerrarSesion = ejecutarCierreSesion
+                    onCerrarSesion = ejecutarCierreSesion,
+                    onNombreActualizado = { nuevoNombre ->
+                        usuarioActual = usuarioActual?.copy(nombreCompleto = nuevoNombre)
+                    }
                 )
             }
             composable(Ruta.RestablecerContrasena.ruta) {

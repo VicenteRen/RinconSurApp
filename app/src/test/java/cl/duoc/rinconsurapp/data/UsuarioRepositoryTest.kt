@@ -1,10 +1,9 @@
 package cl.duoc.rinconsurapp.data
 
+import cl.duoc.rinconsurapp.data.remote.RetrofitClient
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertThrows
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -26,7 +25,10 @@ class UsuarioRepositoryTest {
         assertEquals("214297353", apiFalsa.ultimoRutLogin)
         assertEquals(1L, usuario.id)
         assertEquals("Vicente Ponce", usuario.nombreCompleto)
-        assertEquals("http://127.0.0.1:8080/api/usuarios/avatares/usuario_1.jpg", usuario.avatarUrl)
+        assertEquals(
+            RetrofitClient.resolverUrl("/api/usuarios/avatares/usuario_1.jpg"),
+            usuario.avatarUrl
+        )
     }
 
     @Test
