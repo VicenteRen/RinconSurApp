@@ -1,36 +1,100 @@
-# RinconSurApp - Registro y Control de Accesos [MVP]
 
-App móvil nativa desarrollada en Android (Kotlin) para gestionar controles de acceso y segmentar el flujo de clientes (transeúntes) hacia la tienda de manera intuitiva y expedita. 
+# Rincón Sur - Aplicación Android
 
-Este proyecto fue desarrollado como parte de la carrera de Ingeniería en Informática (Duoc UC).
+Aplicación móvil desarrollada en **Kotlin y Jetpack Compose** para el registro y control de accesos y observaciones de transeúntes en un entorno comercial.
 
-## 📌 Características Principales
+## Tecnologías utilizadas
 
-La aplicación es un MVP que cuenta con un sistema de perfiles y una base de datos local para el manejo seguro de la información:
+- Kotlin y Jetpack Compose (Material Design 3)
+- Arquitectura MVVM
+- Retrofit y Gson
+- Kotlin Coroutines y StateFlow
+- Navigation Compose
+- JUnit y Mockito
+- Android Studio y Gradle
+- Git y GitHub
 
-* **Sistema de Roles:** Acceso diferenciado para **Observador** (quien registra en terreno) y **Administrador** (quien gestiona el sistema).
-* **Registro Rápido (Observación):** Interfaz ágil para registrar variables clave de los transeúntes:
-  * Punto de acceso de destino (Principal, Lateral, Parking, Conexión).
-  * Clasificación (Tránsito, Visita, etc.).
-  * Rango etario y tipo de compañía (Solo, Pareja, Niños, Grupo).
-  * Variable de compras externas.
-* **Gestión de Usuarios:** Módulo de administración para crear, editar, deshabilitar y restaurar credenciales de los empleados.
-* **Seguridad:** Encriptación de contraseñas mediante algoritmo **SHA-256** y sistema de recuperación con preguntas de seguridad.
+## Funcionalidades principales
 
-## 🛠️ Stack Tecnológico
+La aplicación cuenta con dos roles: **Administrador** y **Observador**.
 
-* **Lenguaje:** Kotlin
-* **UI Toolkit:** Jetpack Compose (Material Design 3)
-* **Arquitectura:** MVVM (Model-View-ViewModel)
-* **Base de Datos:** SQLite nativo (`SQLiteOpenHelper`)
-* **Control de Versiones:** Git / GitHub 
+- Inicio de sesión y recuperación de contraseña.
+- Gestión de usuarios y perfiles.
+- Registro, consulta y anulación de observaciones.
+- Administración de puntos de acceso.
+- Historial de registros y estadísticas con gráficos.
+- Validaciones de formularios y control de permisos según el rol.
 
-## 🚀 Cómo ejecutar el proyecto
+## Integración con microservicios
 
-1. Clona este repositorio en tu equipo local: `git clone https://github.com/TU_USUARIO/RinconSurApp.git`
-2. Abre el proyecto utilizando **Android Studio**.
-3. Espera a que Gradle sincronice las dependencias del proyecto.
-4. Ejecuta la aplicación en un emulador o en un dispositivo físico con Android (mediante depuración USB).
+La aplicación utiliza Retrofit para comunicarse con un backend desarrollado en Spring Boot mediante un API Gateway.
+
+| Servicio | Puerto | Función |
+|---|---|---|
+| API Gateway | 8080 | Centraliza las solicitudes |
+| Usuarios | 8082 | Autenticación y usuarios |
+| Observaciones | 8081 | Gestión de observaciones |
+| Accesos | 8083 | Gestión de puntos de acceso |
+
+**Repositorio del backend:**
+
+https://github.com/VicenteRen/Microservicios-RS
+
+## Comunicación con el backend
+
+La aplicación consume APIs REST mediante Retrofit, utilizando el API Gateway para comunicarse con los microservicios de Usuarios, Observaciones y Accesos.
+
+Los endpoints y su documentación técnica se encuentran disponibles en el repositorio del backend:
+
+https://github.com/VicenteRen/Microservicios-RS
+
+## Instalación y ejecución
+
+1. Clonar el repositorio:
+
+```bash
+git clone https://github.com/VicenteRen/RinconSurApp.git
+```
+
+2. Abrir el proyecto en Android Studio y sincronizar Gradle.
+3. Iniciar MySQL y los microservicios del backend.
+4. Conectar un emulador o dispositivo Android.
+
+Para conectar Android con el API Gateway local (`127.0.0.1:8080`), ejecutar:
+
+```bat
+adb reverse tcp:8080 tcp:8080
+```
+
+5. Ejecutar la aplicación desde Android Studio.
+
+## Pruebas unitarias
+
+Se implementaron pruebas utilizando JUnit y Mockito para verificar componentes de la aplicación.
+
+Para ejecutarlas en Windows:
+
+```bat
+gradlew.bat :app:testDebugUnitTest
+```
+
+Los resultados se encuentran en:
+
+`app/build/reports/tests/testDebugUnitTest/index.html`
+
+## Distribución
+
+Para la entrega se generan:
+
+- **APK (.apk):** aplicación instalable.
+- **AAB (.aab):** paquete firmado para distribución.
+- **JKS (.jks):** almacén de claves utilizado para la firma.
+
+Estos archivos se entregan en un ZIP independiente del código fuente. El archivo JKS y sus contraseñas deben mantenerse protegidos y no publicarse en GitHub.
+
+## Control de versiones
+
+El desarrollo se administra mediante Git y GitHub, utilizando commits, ramas y Pull Requests.
 
 ## 👥 Autores
 
