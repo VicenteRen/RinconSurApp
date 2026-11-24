@@ -210,7 +210,7 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun guardarCambios() {
+    fun guardarCambios(onNombreActualizado: (String) -> Unit = {}) {
         val estado = _uiState.value
 
         if (!estado.esValido || !nombreValido(estado.nombreCompleto)) {
@@ -288,6 +288,8 @@ class PerfilUsuarioViewModel(application: Application) : AndroidViewModel(applic
                         mensajeActualizacion = mensaje
                     )
                 }
+
+                onNombreActualizado(nuevoNombre)
             } catch (e: Exception) {
                 val mensaje = e.message
                     ?: "No se pudo actualizar el perfil."
