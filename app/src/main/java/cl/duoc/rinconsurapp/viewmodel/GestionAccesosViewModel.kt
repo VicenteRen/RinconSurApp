@@ -50,7 +50,7 @@ class GestionAccesosViewModel : ViewModel() {
         val codigoLimpio = estado.codigo.trim().uppercase()
         val nombreLimpio = estado.nombre.trim()
 
-        val formatoCodigoValido = Regex("^[A-Z]{1}[0-9]{1}$")
+        val formatoCodigoValido = Regex("^[A-ZÑ]{1}[0-9]{1}$")
 
         val errorCodigo = when {
             codigoLimpio.isBlank() -> "El código es obligatorio (ej: A5)"
