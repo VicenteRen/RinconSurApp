@@ -1,12 +1,22 @@
 package cl.duoc.rinconsurapp.data.remote
 
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
     // private const val URL_GATEWAY = "http://10.0.2.2:8080/"
     private const val URL_GATEWAY = "http://127.0.0.1:8080/"
+
+    private val okHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
+    }
 
     fun resolverUrl(ruta: String?): String? {
         if (ruta.isNullOrBlank()) return null
@@ -17,6 +27,7 @@ object RetrofitClient {
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(URL_GATEWAY)
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
