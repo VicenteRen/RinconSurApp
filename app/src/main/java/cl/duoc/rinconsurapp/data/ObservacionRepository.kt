@@ -77,7 +77,6 @@ class ObservacionRepository(
     }
 
 
-    // --- Operaciones de Accesos ---
     suspend fun listarAccesosActivos(): List<Acceso> =
         llamar { accesoApi.listarActivos() }.map { it.aAcceso() }
 
@@ -90,7 +89,6 @@ class ObservacionRepository(
     suspend fun cambiarEstadoAcceso(id: Long): Acceso =
         llamar { accesoApi.cambiarEstado(id) }.aAcceso()
 
-    // --- Manejo de errores de red del profe ---
     private suspend fun <T> llamar(peticion: suspend () -> T): T = try {
         peticion()
     } catch (e: HttpException) {
